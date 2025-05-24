@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/RegisterScreen';
 import HomeScreen from './screens/HomeScreen';
 import RwandaMap from './screens/CollectionPoints';
+import Chat from './screens/Chat';
 
 const Stack = createStackNavigator();
 
@@ -65,6 +66,17 @@ function App() {
           options={{
             headerShown: false,
             gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={Chat}
+          options={{
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#2d6a4f',
+            },
+            headerTintColor: '#fff',
           }}
         />
       </Stack.Navigator>

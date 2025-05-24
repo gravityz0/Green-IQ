@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Alert, Modal } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SearchBar } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 
 const RwandaMap = () => {
   const navigation = useNavigation();
@@ -11,6 +12,8 @@ const RwandaMap = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const rwandaCenter = { latitude: -1.9403, longitude: 29.8739 };
   const rwandaRegion = {
@@ -84,7 +87,22 @@ const RwandaMap = () => {
   };
 
   const handleMarkerClick = (point) => {
-    navigation.navigate('Home', { point });
+    setSelectedPoint(point);
+    setShowConfirmation(true);
+  };
+
+  const handleJoinChat = () => {
+    setShowConfirmation(false);
+    navigation.navigate('Chat', { 
+      collectionPoint: selectedPoint,
+      pointName: selectedPoint.name,
+      pointManager: selectedPoint.manager
+    });
+  };
+
+  const handleCancel = () => {
+    setShowConfirmation(false);
+    setSelectedPoint(null);
   };
 
   const goToLocation = (point) => {
@@ -115,8 +133,14 @@ const RwandaMap = () => {
             coordinate={point.coords}
             title={point.name}
             description={point.description}
+            onPress={() => handleMarkerClick(point)}
           >
-            <Callout tooltip onPress={() => handleMarkerClick(point)}>
+            <View style={styles.markerContainer}>
+              <View style={styles.markerInner}>
+                <Ionicons name="location" size={24} color="#fff" />
+              </View>
+            </View>
+            <Callout tooltip>
               <View style={styles.calloutContainer}>
                 <Text style={styles.calloutTitle}>{point.name}</Text>
                 <Text style={styles.calloutDescription}>{point.description}</Text>
@@ -126,16 +150,70 @@ const RwandaMap = () => {
                 <Text style={styles.calloutText}>Hours: {point.hours}</Text>
                 <Text style={styles.calloutText}>Contact: {point.contact}</Text>
                 <TouchableOpacity 
-                  style={styles.calloutButton} 
+                  style={styles.joinChatButton}
                   onPress={() => handleMarkerClick(point)}
                 >
-                  <Text style={styles.calloutButtonText}>Join</Text>
+                  <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                  <Text style={styles.joinChatText}>Join Chat</Text>
                 </TouchableOpacity>
               </View>
             </Callout>
           </Marker>
         ))}
       </MapView>
+      
+      {/* Confirmation Modal */}
+      <Modal
+        visible={showConfirmation}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancel}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="chatbubble-ellipses" size={32} color="#2d6a4f" />
+              <Text style={styles.modalTitle}>Join Chat Room</Text>
+            </View>
+            
+            {selectedPoint && (
+              <View style={styles.modalBody}>
+                <Text style={styles.modalText}>
+                  Would you like to join the chat room for {selectedPoint.name}?
+                </Text>
+                <Text style={styles.modalSubText}>
+                  You'll be able to chat with the collection point manager and other users.
+                </Text>
+                <View style={styles.modalInfo}>
+                  <Text style={styles.modalInfoText}>
+                    <Text style={styles.modalInfoLabel}>Manager: </Text>
+                    {selectedPoint.manager}
+                  </Text>
+                  <Text style={styles.modalInfoText}>
+                    <Text style={styles.modalInfoLabel}>Location: </Text>
+                    {selectedPoint.district}, {selectedPoint.sector}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={handleCancel}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.joinButton]} 
+                onPress={handleJoinChat}
+              >
+                <Text style={styles.joinButtonText}>Join Chat</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       
       <View style={styles.searchContainer}>
         <SearchBar
@@ -164,10 +242,36 @@ const RwandaMap = () => {
         )}
       </View>
       
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Rwanda Waste Collection Map</Text>
-        <Text style={styles.infoSubtitle}>Tap a point to Join center</Text>
-      </View>
+      {selectedPoint && (
+        <View style={styles.selectedPointContainer}>
+          <View style={styles.selectedPointContent}>
+            <View style={styles.selectedPointHeader}>
+              <Text style={styles.selectedPointTitle}>{selectedPoint.name}</Text>
+              <TouchableOpacity 
+                style={styles.joinChatButton}
+                onPress={() => setShowConfirmation(true)}
+              >
+                <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
+                <Text style={styles.joinChatText}>Join Chat</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.selectedPointDetails}>
+              <Text style={styles.selectedPointText}>
+                <Text style={styles.selectedPointLabel}>Manager: </Text>
+                {selectedPoint.manager}
+              </Text>
+              <Text style={styles.selectedPointText}>
+                <Text style={styles.selectedPointLabel}>Location: </Text>
+                {selectedPoint.district}, {selectedPoint.sector}
+              </Text>
+              <Text style={styles.selectedPointText}>
+                <Text style={styles.selectedPointLabel}>Hours: </Text>
+                {selectedPoint.hours}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -239,11 +343,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6c6c6c',
   },
+  markerContainer: {
+    backgroundColor: '#ff6a4f',
+    padding: 1,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  markerInner: {
+    backgroundColor: '#ff6a4f',
+    width: 24,
+    height: 24,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   calloutContainer: {
     width: 250,
     backgroundColor: 'white',
     borderRadius: 10,
-    padding: 10,
+    padding: 15,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -265,16 +389,149 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 3,
   },
-  calloutButton: {
-    backgroundColor: '#2d6a4f',
-    padding: 8,
-    borderRadius: 5,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
   },
-  calloutButtonText: {
-    color: 'white',
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#2d6a4f',
+    marginTop: 10,
+  },
+  modalBody: {
+    marginBottom: 20,
+  },
+  modalText: {
+    fontSize: 18,
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalSubText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  modalInfo: {
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
+    padding: 15,
+    borderRadius: 10,
+  },
+  modalInfoText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 5,
+  },
+  modalInfoLabel: {
+    fontWeight: 'bold',
+    color: '#2d6a4f',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#2d6a4f',
+  },
+  joinButton: {
+    backgroundColor: '#2d6a4f',
+  },
+  cancelButtonText: {
+    color: '#2d6a4f',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  joinButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  selectedPointContainer: {
+    position: 'absolute',
+    top: 120,
+    left: 10,
+    right: 10,
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  selectedPointContent: {
+    flex: 1,
+  },
+  selectedPointHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  selectedPointTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2d6a4f',
+    flex: 1,
+  },
+  joinChatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2d6a4f',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  joinChatText: {
+    color: 'white',
+    marginLeft: 5,
+    fontWeight: '600',
+  },
+  selectedPointDetails: {
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
+    padding: 10,
+    borderRadius: 10,
+  },
+  selectedPointText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 5,
+  },
+  selectedPointLabel: {
+    fontWeight: 'bold',
+    color: '#2d6a4f',
   },
 });
 

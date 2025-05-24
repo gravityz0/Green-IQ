@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -10,7 +10,9 @@ import {
   SafeAreaView,
   StatusBar,
   Animated,
-  Dimensions
+  Dimensions,
+  Platform,
+  BackHandler
 } from 'react-native';
 import { 
   Ionicons, 
@@ -20,20 +22,57 @@ import {
   Feather
 } from '@expo/vector-icons';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+const isSmallDevice = width < 375;
+const isTablet = width >= 768;
+
+// Color constants
+const COLORS = {
+  primary: '#2d6a4f',
+  primaryLight: '#40916c',
+  primaryDark: '#1b4332',
+  accent: '#74c69d',
+  white: '#ffffff',
+  background: '#f8f9fa',
+  text: '#2d6a4f',
+  textLight: '#40916c',
+  textDark: '#1b4332',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+};
 
 const HomeScreen = ({ navigation }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const slideAnim = useRef(new Animated.Value(-width * 0.7)).current;
+  const slideAnim = useRef(new Animated.Value(-width)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (menuOpen) {
+        toggleMenu();
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [menuOpen]);
 
   const toggleMenu = () => {
-    const toValue = menuOpen ? -width * 0.7 : 0;
+    const toValue = menuOpen ? -width : 0;
+    const fadeToValue = menuOpen ? 0 : 1;
     
-    Animated.timing(slideAnim, {
-      toValue,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: fadeToValue,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start();
     
     setMenuOpen(!menuOpen);
   };
@@ -45,109 +84,120 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.white} />
       
-      {/* Hamburger Menu */}
+      {/* Overlay */}
+      {menuOpen && (
+        <Animated.View 
+          style={[
+            styles.overlay,
+            {
+              opacity: fadeAnim,
+            }
+          ]}
+        >
+          <TouchableOpacity 
+            style={styles.overlayTouchable} 
+            activeOpacity={1} 
+            onPress={toggleMenu}
+          />
+        </Animated.View>
+      )}
+      
+      {/* Side Menu */}
       <Animated.View 
         style={[
           styles.sideMenu, 
-          { transform: [{ translateX: slideAnim }] }
+          { 
+            transform: [{ translateX: slideAnim }],
+          }
         ]}
       >
         <View style={styles.menuHeader}>
           <Image 
-            source={require('../assets/favicon.png')} 
+            source={require('../assets/trash.png')} 
             style={styles.menuLogo} 
           />
           <Text style={styles.menuLogoText}>Trash it</Text>
         </View>
         
-        <View style={styles.menuItems}>
+        <ScrollView style={styles.menuItems} showsVerticalScrollIndicator={false}>
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Home')}
           >
-            <Ionicons name="home" size={22} color="#4CAF50" />
+            <Ionicons name="home" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Home</Text>
           </TouchableOpacity>
-          {/* Controlling chat app */}
+          
           <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => navigateTo('Home')}
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
+            onPress={() => navigateTo('Chat')}
           >
-            <Ionicons name="home" size={22} color="#4CAF50" />
+            <Ionicons name="chatbubble-outline" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Chats</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('WasteDisposal')}
           >
-            <FontAwesome5 name="trash" size={20} color="#4CAF50" />
+            <FontAwesome5 name="trash" size={20} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Waste Disposal</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Biosafety')}
           >
-            <MaterialCommunityIcons name="molecule" size={22} color="#4CAF50" />
+            <MaterialCommunityIcons name="molecule" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Biosafety</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Industries')}
           >
-            <MaterialCommunityIcons name="factory" size={22} color="#4CAF50" />
+            <MaterialCommunityIcons name="factory" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Industries</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Donate')}
           >
-            <FontAwesome5 name="hand-holding-heart" size={20} color="#4CAF50" />
+            <FontAwesome5 name="hand-holding-heart" size={20} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Donate</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Volunteer')}
           >
-            <FontAwesome5 name="hands-helping" size={20} color="#4CAF50" />
+            <FontAwesome5 name="hands-helping" size={20} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Volunteer</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
         
         <View style={styles.menuFooter}>
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Settings')}
           >
-            <Ionicons name="settings-outline" size={22} color="#777" />
+            <Ionicons name="settings-outline" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Settings</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.menuItem} 
+            style={[styles.menuItem, menuOpen && styles.menuItemActive]} 
             onPress={() => navigateTo('Help')}
           >
-            <Feather name="help-circle" size={22} color="#777" />
+            <Feather name="help-circle" size={22} color={COLORS.primary} />
             <Text style={styles.menuItemText}>Help</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
-      
-      {/* Overlay when menu is open */}
-      {menuOpen && (
-        <TouchableOpacity 
-          style={styles.overlay} 
-          activeOpacity={1} 
-          onPress={toggleMenu}
-        />
-      )}
-      
+
       {/* Main Content */}
       <View style={styles.mainContent}>
         {/* Header Section */}
@@ -159,7 +209,7 @@ const HomeScreen = ({ navigation }) => {
           
           <View style={styles.logoContainer}>
             <Image 
-              source={require('../assets/favicon.png')} 
+              source={require('../assets/trash.png')} 
               style={styles.logo} 
             />
             <Text style={styles.logoText}>Trash it</Text>
@@ -245,6 +295,16 @@ const HomeScreen = ({ navigation }) => {
                   <FontAwesome5 name="hand-holding-heart" size={22} color="#4CAF50" />
                 </View>
                 <Text style={styles.quickAccessText}>Donate</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.quickAccessItem}
+                onPress={() => navigation.navigate('RwandaMap')}
+              >
+                <View style={styles.quickAccessIcon}>
+                  <MaterialCommunityIcons name="map-marker-multiple" size={22} color="#4CAF50" />
+                </View>
+                <Text style={styles.quickAccessText}>Map</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -410,20 +470,32 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.background,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 998,
+  },
+  overlayTouchable: {
+    flex: 1,
   },
   sideMenu: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: '70%',
-    backgroundColor: 'white',
+    width: isTablet ? '50%' : '75%',
+    backgroundColor: COLORS.white,
     zIndex: 999,
-    paddingVertical: 40,
-    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 50 : 40,
+    paddingHorizontal: 20,
     elevation: 10,
-    shadowColor: '#000',
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 5, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -434,45 +506,45 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: 'rgba(45, 106, 79, 0.1)',
   },
   menuLogo: {
-    width: 36,
-    height: 36,
-    tintColor: '#4CAF50',
+    width: isSmallDevice ? 36 : 40,
+    height: isSmallDevice ? 36 : 40,
+    tintColor: COLORS.primary,
   },
   menuLogoText: {
-    color: '#333',
-    fontSize: 22,
+    color: COLORS.primary,
+    fontSize: isSmallDevice ? 20 : 24,
     fontWeight: 'bold',
     marginLeft: 12,
   },
   menuItems: {
     flex: 1,
+    marginTop: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: 'rgba(45, 106, 79, 0.05)',
+  },
+  menuItemActive: {
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
   },
   menuItemText: {
     marginLeft: 16,
-    fontSize: 16,
-    color: '#333',
+    fontSize: isSmallDevice ? 14 : 16,
+    color: COLORS.primary,
+    fontWeight: '500',
   },
   menuFooter: {
     borderTopWidth: 1,
     borderTopColor: '#eee',
     paddingTop: 20,
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 998,
   },
   mainContent: {
     flex: 1,
@@ -481,233 +553,237 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    elevation: 2,
-    shadowColor: '#000',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    elevation: 4,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0,
-    shadowRadius: 3,
-    marginTop: 20,
-    color: 'white',
-    // opacity: 0.9,
-    transparent: true,
-
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginTop: Platform.OS === 'ios' ? 40 : 20,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     tintColor: '#4CAF50',
   },
   logoText: {
-    color: '#333',
-    fontSize: 18,
+    color: '#2d6a4f',
+    fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 8,
+    marginLeft: 10,
   },
   scrollView: {
     flex: 1,
   },
   headerBackground: {
     width: '100%',
-    height: 220,
-    marginBottom: 20,
+    height: isTablet ? 300 : 250,
+    marginBottom: 25,
   },
   headerContent: {
-    padding: 20,
+    padding: 25,
     flex: 1,
     justifyContent: 'center',
+    backgroundColor: 'rgba(45, 106, 79, 0.3)',
   },
   headerTextContainer: {
-    maxWidth: '80%',
+    maxWidth: '85%',
   },
   headerText: {
-    fontSize: 24,
+    fontSize: isTablet ? 40 : 32,
     fontWeight: 'bold',
-    color: 'white',
+    color: COLORS.white,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
+    marginBottom: 5,
   },
   greenText: {
-    color: '#4CAF50',
+    color: COLORS.accent,
   },
   readMoreButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,
     borderColor: 'white',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
     alignSelf: 'flex-start',
-    marginTop: 20,
+    marginTop: 25,
   },
   readMoreText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   quickAccessContainer: {
-    marginBottom: 25,
-    paddingHorizontal: 16,
+    marginBottom: 30,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: isTablet ? 26 : 22,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    color: COLORS.primary,
+    marginBottom: 20,
   },
   quickAccessScroll: {
     flexDirection: 'row',
   },
   quickAccessItem: {
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: isTablet ? 35 : 25,
   },
   quickAccessIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    width: isTablet ? 80 : 70,
+    height: isTablet ? 80 : 70,
+    borderRadius: isTablet ? 40 : 35,
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: COLORS.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   quickAccessText: {
-    fontSize: 12,
-    color: '#555',
+    fontSize: isSmallDevice ? 12 : 14,
+    color: COLORS.primary,
+    fontWeight: '500',
   },
   servicesContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 25,
+    paddingHorizontal: 20,
+    marginBottom: 30,
   },
   cardsContainer: {
-    marginTop: 4,
+    marginTop: 10,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    width: '48%',
-    elevation: 3,
-    shadowColor: '#000',
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    width: isTablet ? '48%' : '48%',
+    elevation: 4,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
     overflow: 'hidden',
   },
   cardContent: {
-    padding: 16,
+    padding: isTablet ? 25 : 20,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    width: isTablet ? 64 : 56,
+    height: isTablet ? 64 : 56,
+    borderRadius: isTablet ? 32 : 28,
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 15,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: isTablet ? 18 : 16,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: 10,
+    color: COLORS.primary,
   },
   cardDescription: {
-    fontSize: 12,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 12,
+    fontSize: isTablet ? 14 : 13,
+    color: COLORS.textLight,
+    lineHeight: isTablet ? 22 : 20,
+    marginBottom: 15,
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   cardReadMore: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#4CAF50',
     fontWeight: '600',
-    marginRight: 4,
+    marginRight: 6,
   },
   tipsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 25,
+    paddingHorizontal: 20,
+    marginBottom: 30,
   },
   tipCard: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: isTablet ? 25 : 20,
     flexDirection: 'row',
-    elevation: 3,
-    shadowColor: '#000',
+    elevation: 4,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
   },
   tipIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    width: isTablet ? 80 : 70,
+    height: isTablet ? 80 : 70,
+    borderRadius: isTablet ? 40 : 35,
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 20,
   },
   tipContent: {
     flex: 1,
   },
   tipTitle: {
-    fontSize: 16,
+    fontSize: isTablet ? 20 : 18,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    color: COLORS.primary,
+    marginBottom: 10,
   },
   tipDescription: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 12,
+    fontSize: isTablet ? 16 : 14,
+    color: COLORS.textLight,
+    lineHeight: isTablet ? 24 : 22,
+    marginBottom: 15,
   },
   tipButton: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(45, 106, 79, 0.1)',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     alignSelf: 'flex-start',
   },
   tipButtonText: {
-    color: '#4CAF50',
-    fontSize: 12,
+    color: COLORS.primary,
+    fontSize: isTablet ? 16 : 14,
     fontWeight: '600',
   },
   footerSpace: {
-    height: 80,
+    height: 100,
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#4CAF50',
+    bottom: isTablet ? 35 : 25,
+    right: isTablet ? 35 : 25,
+    width: isTablet ? 75 : 65,
+    height: isTablet ? 75 : 65,
+    borderRadius: isTablet ? 37.5 : 32.5,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
+    elevation: 6,
+    shadowColor: COLORS.shadow,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
 });
 
