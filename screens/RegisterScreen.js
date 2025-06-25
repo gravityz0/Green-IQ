@@ -1,5 +1,6 @@
-
+import axios from 'axios';
 import React, { useState } from 'react';
+import {BACKEND_URL} from '../config'
 import { 
   StyleSheet, 
   View, 
@@ -9,7 +10,8 @@ import {
   TextInput,
   StatusBar,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -21,6 +23,31 @@ const SignUpScreen = ({ navigation }) => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+const handleRegister = async()=>{
+  try {
+    if(password !== confirmPassword){
+      return Alert.alert("Password donot match")
+    }else{
+      const response = await axios.post(`${BACKEND_URL}/register`,{
+      fullNames: fullName,
+      email,
+      password
+    })
+    setEmail('')
+    setFullName('')
+    setConfirmPassword('')
+    setPassword('')
+    Alert.alert("Please check your email to activate your account")
+    }
+  } catch (error) {
+    if(error.response){
+      Alert.alert(error.response.data.message)
+    }else{
+      Alert.alert("An error occured")
+    }
+  }
+}
 
   return (
     <View style={styles.container}>
@@ -135,10 +162,7 @@ const SignUpScreen = ({ navigation }) => {
                     styles.disabledButton
                 ]}
                 disabled={!fullName || !email || !password || !confirmPassword || !acceptTerms}
-                onPress={() => {
-                //  Navigate to the home screen
-                  navigation.navigate('Home');
-                }}
+                onPress={handleRegister}
               >
                 <Text style={styles.signUpButtonText}>Sign Up</Text>
               </TouchableOpacity>
