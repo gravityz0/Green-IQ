@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
+import { UserContext } from '../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +31,8 @@ const LoginScreen = ({ navigation }) => {
   // Animations
   const formAnim = useRef(new Animated.Value(0)).current;
   
+  const { setUser } = useContext(UserContext);
+
   useEffect(() => {
     Animated.timing(formAnim, {
       toValue: 1,
@@ -61,7 +64,7 @@ const LoginScreen = ({ navigation }) => {
         text1: 'Login Successful!',
         text2: 'Welcome back to Trash_IQ'
       });
-      
+      setUser({ email });
       // Navigate to home
       navigation.navigate('Home');
     } catch (error) {

@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { UserContext } from '../context/UserContext';
 
 const ProfileScreen = ({ navigation }) => {
-  const userName = "Isaac"; // Placeholder
+  const { user } = useContext(UserContext);
+  const userName = user?.name || "Isaac";
+  const userEmail = user?.email || "";
 
   return (
     <SafeAreaView style={styles.container}>
@@ -13,7 +16,7 @@ const ProfileScreen = ({ navigation }) => {
           style={styles.avatar}
         />
         <Text style={styles.userName}>{userName}</Text>
-        <Text style={styles.userHandle}>@${userName.toLowerCase()}</Text>
+        <Text style={styles.userHandle}>{userEmail}</Text>
       </View>
 
       <View style={styles.menuContainer}>
@@ -33,6 +36,12 @@ const ProfileScreen = ({ navigation }) => {
           <Ionicons name="help-circle-outline" size={24} color="#1b4332" />
           <Text style={styles.menuItemText}>Help Center</Text>
         </TouchableOpacity>
+        {userEmail.endsWith('@rca.com') && (
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Dashboard')}>
+            <Ionicons name="analytics-outline" size={24} color="#1b4332" />
+            <Text style={styles.menuItemText}>Government Dashboard</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={[styles.menuItem, styles.logoutButton]}>
           <Ionicons name="log-out-outline" size={24} color="#d9534f" />
           <Text style={[styles.menuItemText, {color: '#d9534f'}]}>Logout</Text>

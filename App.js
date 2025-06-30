@@ -17,6 +17,8 @@ import ProfileScreen from './screens/ProfileScreen';
 import LocationSelectionScreen from './screens/LocationSelectionScreen';
 import Toast from 'react-native-toast-message';
 import ChatInfoScreen from './screens/ChatInfo';
+import { UserProvider } from './context/UserContext';
+import Dashboard from './screens/Dashboard';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -72,7 +74,7 @@ function AppTabs() {
 // The complete app navigation flow
 function App() {
   return (
-    <>
+    <UserProvider>
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Welcome"
@@ -88,12 +90,14 @@ function App() {
           
           {/* Main app screens (with tab bar) */}
           <Stack.Screen name="Home" component={AppTabs} />
+          <Stack.Screen name="Chat" component={Chat} />
           <Stack.Screen name="ChatInfo" component={ChatInfoScreen} />
+          <Stack.Screen name="Dashboard" component={Dashboard} />
 
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />
-    </>
+    </UserProvider>
   );
 }
 
