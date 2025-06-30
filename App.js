@@ -14,7 +14,9 @@ import CollectionPoints from './screens/CollectionPoints';
 import Chat from './screens/Chat';
 import ScanScreen from './screens/ScanScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import LocationSelectionScreen from './screens/LocationSelectionScreen';
 import Toast from 'react-native-toast-message';
+import ChatInfoScreen from './screens/ChatInfo';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,12 +50,14 @@ function AppTabs() {
         tabBarActiveTintColor: '#2d6a4f',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: false,
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 0,
-          elevation: 10,
-          shadowOpacity: 0.1,
-        },
+        tabBarStyle: route.name === 'Chat'
+          ? { display: 'none' }
+          : {
+              backgroundColor: '#ffffff',
+              borderTopWidth: 0,
+              elevation: 10,
+              shadowOpacity: 0.1,
+            },
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
@@ -80,9 +84,11 @@ function App() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
           
           {/* Main app screens (with tab bar) */}
           <Stack.Screen name="Home" component={AppTabs} />
+          <Stack.Screen name="ChatInfo" component={ChatInfoScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

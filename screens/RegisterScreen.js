@@ -19,11 +19,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 
-const SignUpScreen = ({ navigation }) => {
+const SignUpScreen = ({ navigation, route }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [location, setLocation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,9 +41,15 @@ const SignUpScreen = ({ navigation }) => {
     }).start();
   }, []);
 
+  useEffect(() => {
+    if (route.params?.selectedLocation) {
+      setLocation(route.params.selectedLocation);
+    }
+  }, [route.params?.selectedLocation]);
+
   const handleRegister = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields.' });
+    if (!fullName || !email || !password || !confirmPassword || !location) {
+      Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields, including location.' });
       return;
     }
     if (password !== confirmPassword) {
@@ -104,6 +111,11 @@ const SignUpScreen = ({ navigation }) => {
                   <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                   <TextInput style={styles.input} placeholder="Email Address" placeholderTextColor="rgba(255,255,255,0.5)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
                 </View>
+                <TouchableOpacity onPress={() => navigation.navigate('LocationSelection')} style={styles.inputContainer}>
+                  <Ionicons name="location-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
+                  <Text style={[styles.input, !location && styles.placeholderText]}>{location || 'Select Your Location'}</Text>
+                  <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.7)" style={styles.inputIcon} />
                   <TextInput style={styles.input} placeholder="Password" placeholderTextColor="rgba(255,255,255,0.5)" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
@@ -180,6 +192,9 @@ const styles = StyleSheet.create({
   },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, color: 'white', fontSize: 16 },
+  placeholderText: {
+    color: 'rgba(255,255,255,0.5)',
+  },
   signInButton: { borderRadius: 12, overflow: 'hidden', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
   signInGradient: { justifyContent: 'center', alignItems: 'center', paddingVertical: 16, minHeight: 50 },
   signInButtonText: { color: 'white', fontSize: 18, fontWeight: '600' },

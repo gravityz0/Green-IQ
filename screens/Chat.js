@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,114 +15,62 @@ import {
   Modal,
   Pressable,
   Animated,
+  ImageBackground,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Mock data for demonstration
-const MOCK_MESSAGES = [
-  {
-    id: '1',
-    text: 'Welcome to our collection point chat! How can we help you today?',
-    sender: 'manager',
-    senderName: 'Rukundo Furaha',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-    isForwarded: false,
-  },
-  {
-    id: '2',
-    text: 'Hi! I have some questions about waste collection.',
-    sender: 'user',
-    senderName: 'You',
-    timestamp: new Date(Date.now() - 3500000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-    isForwarded: false,
-  },
-  {
-    id: '3',
-    text: 'Sure! What would you like to know?',
-    sender: 'manager',
-    senderName: 'Rukundo Furaha',
-    timestamp: new Date(Date.now() - 3400000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-    isForwarded: false,
-  },
-  {
-    id: '4',
-    text: 'What types of waste do you accept?',
-    sender: 'user',
-    senderName: 'You',
-    timestamp: new Date(Date.now() - 3300000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-  },
-  {
-    id: '5',
-    text: 'We accept recyclable wastes, plastic, paper, and metal. Here\'s our schedule:',
-    sender: 'manager',
-    senderName: 'Rukundo Furaha',
-    timestamp: new Date(Date.now() - 3200000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-  },
-  {
-    id: '6',
-    text: 'Mon-Sat: 7:00 AM - 6:00 PM',
-    sender: 'manager',
-    senderName: 'Rukundo Furaha',
-    timestamp: new Date(Date.now() - 3100000).toISOString(),
-    type: 'text',
-    status: 'read',
-    reactions: [],
-  },
-];
+// Mock Data (can be replaced with API calls)
+const getMockMessages = (managerName) => [
+  { id: '1', text: 'Welcome to our collection point chat! How can we help?', sender: 'manager', timestamp: new Date(Date.now() - 3600000) },
+  { id: '2', text: 'Hi! I have some questions about waste collection.', sender: 'user', timestamp: new Date(Date.now() - 3500000) },
+  { id: '3', text: 'Sure! What would you like to know?', sender: 'manager', timestamp: new Date(Date.now() - 3400000) },
+  { id: '4', text: 'What types of waste do you accept?', sender: 'user', timestamp: new Date(Date.now() - 3300000) },
+  { id: '5', text: 'We accept plastic, paper, and metal. Here\'s our schedule: Mon-Sat, 7am-6pm', sender: 'manager', timestamp: new Date(Date.now() - 3200000) },
+].reverse(); // Reverse for inverted FlatList
 
-const MOCK_USERS = {
-  manager: {
-    id: 'manager1',
-    name: 'Rukundo Furaha',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    role: 'Collection Point Manager',
-    online: true,
-    lastSeen: new Date(Date.now() - 300000).toISOString(),
-    status: 'Available',
-  },
-  user: {
-    id: 'user1',
-    name: 'You',
-    avatar: 'https://i.pravatar.cc/150?img=2',
-    role: 'User',
-    online: true,
-    lastSeen: new Date().toISOString(),
-    status: 'Available',
-  },
-};
+const getMockUsers = (managerName) => ({
+  manager: { id: 'manager1', name: managerName, avatar: `https://i.pravatar.cc/150?u=${managerName}` },
+  user: { id: 'user1', name: 'You', avatar: 'https://i.pravatar.cc/150?u=user' },
+});
 
 const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
+// Reusable Message Bubble Component
+const MessageBubble = ({ message, isUser, user }) => {
+  return (
+    <View style={[styles.messageRow, isUser ? styles.messageRowUser : {}]}>
+      {!isUser && <Image source={{ uri: user.avatar }} style={styles.avatar} />}
+      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleManager]}>
+        <Text style={isUser ? styles.bubbleTextUser : styles.bubbleTextManager}>{message.text}</Text>
+        <View style={styles.bubbleFooter}>
+          <Text style={styles.timestamp}>{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+          {isUser && <Ionicons name="checkmark-done" size={16} color="#e0f2f1" style={{ marginLeft: 4 }} />}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// Main Chat Component
 const Chat = ({ route, navigation }) => {
-  const { collectionPoint, pointName, pointManager } = route.params;
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const { pointName = "Select a Chat", pointManager = "Manager" } = route.params || {};
+  const insets = useSafeAreaInsets();
+
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const users = useMemo(() => getMockUsers(pointManager), [pointManager]);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [showReactions, setShowReactions] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [showMessageOptions, setShowMessageOptions] = useState(false);
-  const [forwardMessage, setForwardMessage] = useState(null);
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const messageOptionsAnimation = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     navigation.setOptions({
@@ -133,25 +81,39 @@ const Chat = ({ route, navigation }) => {
       headerTintColor: '#fff',
       headerRight: () => (
         <View style={styles.headerRight}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.headerButton}
-            onPress={() => navigation.navigate('ChatInfo', { 
-              user: MOCK_USERS.manager,
-              collectionPoint 
+            onPress={() => navigation.navigate('ChatInfo', {
+              user: users.manager,
+              collectionPoint: route.params,
             })}
+            accessibilityLabel="Chat Information"
           >
             <Ionicons name="information-circle-outline" size={24} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.headerButton}
             onPress={() => setShowMessageOptions(true)}
+            accessibilityLabel="Message Options"
           >
             <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       ),
     });
-  }, []);
+
+    // Animate message list on mount
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Load initial messages only if a valid chat is selected
+    if (route.params?.pointName) {
+      setMessages(getMockMessages(pointManager));
+    }
+  }, [navigation, pointName, pointManager, fadeAnim, route.params]);
 
   const handleTyping = () => {
     setIsTyping(true);
@@ -164,14 +126,21 @@ const Chat = ({ route, navigation }) => {
   };
 
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Please allow access to photos to send images.');
+      return;
+    }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
+      setIsLoading(true);
       const newMessage = {
         id: Date.now().toString(),
         type: 'image',
@@ -184,69 +153,30 @@ const Chat = ({ route, navigation }) => {
         isForwarded: false,
       };
       setMessages(prevMessages => [...prevMessages, newMessage]);
-      
-      // Simulate image upload and sending
+
       setTimeout(() => {
-        setMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.id === newMessage.id 
+        setMessages(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id === newMessage.id
               ? { ...msg, status: 'sent' }
               : msg
           )
         );
+        setIsLoading(false);
       }, 1000);
     }
   };
 
-  const sendMessage = () => {
-    if (message.trim().length === 0) return;
-
+  const handleSend = () => {
+    if (input.trim() === '') return;
     const newMessage = {
       id: Date.now().toString(),
-      text: message.trim(),
+      text: input.trim(),
       sender: 'user',
-      senderName: 'You',
-      timestamp: new Date().toISOString(),
-      type: 'text',
-      status: 'sending',
-      reactions: [],
-      replyTo: replyTo,
-      isForwarded: false,
+      timestamp: new Date(),
     };
-
-    setMessages(prevMessages => [...prevMessages, newMessage]);
-    setMessage('');
-    setReplyTo(null);
-    handleTyping();
-
-    // Simulate message sending and response
-    setTimeout(() => {
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.id === newMessage.id 
-            ? { ...msg, status: 'sent' }
-            : msg
-        )
-      );
-
-      // Simulate typing indicator
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const response = {
-          id: (Date.now() + 1).toString(),
-          text: 'Thank you for your message. We will get back to you shortly.',
-          sender: 'manager',
-          senderName: MOCK_USERS.manager.name,
-          timestamp: new Date().toISOString(),
-          type: 'text',
-          status: 'read',
-          reactions: [],
-          isForwarded: false,
-        };
-        setMessages(prevMessages => [...prevMessages, response]);
-      }, 2000);
-    }, 1000);
+    setMessages(prev => [newMessage, ...prev]);
+    setInput('');
   };
 
   const handleReaction = (messageId, reaction) => {
@@ -270,18 +200,13 @@ const Chat = ({ route, navigation }) => {
 
   const handleMessageLongPress = (message) => {
     setSelectedMessage(message);
-    Animated.spring(messageOptionsAnimation, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
     setShowMessageOptions(true);
   };
 
   const handleForward = () => {
     if (selectedMessage) {
-      setForwardMessage(selectedMessage);
+      setReplyTo(selectedMessage);
       setShowMessageOptions(false);
-      // Here you would typically show a contact list to forward to
       Alert.alert('Forward Message', 'Select a contact to forward to');
     }
   };
@@ -292,10 +217,7 @@ const Chat = ({ route, navigation }) => {
         'Delete Message',
         'Are you sure you want to delete this message?',
         [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
+          { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
             style: 'destructive',
@@ -311,529 +233,111 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
-  const renderMessageStatus = (status) => {
-    switch (status) {
-      case 'sending':
-        return <ActivityIndicator size="small" color="#666" />;
-      case 'sent':
-        return <Ionicons name="checkmark" size={16} color="#666" />;
-      case 'read':
-        return <Ionicons name="checkmark-done" size={16} color="#2d6a4f" />;
-      default:
-        return null;
-    }
-  };
-
-  const renderReactions = (reactions) => {
-    if (!reactions || reactions.length === 0) return null;
-    
+  // Empty state for when no chat is selected
+  if (!route.params?.pointName) {
     return (
-      <View style={styles.reactionsContainer}>
-        {reactions.map((reaction, index) => (
-          <Text key={index} style={styles.reactionText}>
-            {reaction.reaction}
-          </Text>
-        ))}
-      </View>
+      <ImageBackground source={require('../assets/Back.png')} style={styles.container} imageStyle={{ opacity: 0.1 }}>
+        <SafeAreaView style={styles.emptyContainer}>
+          <Ionicons name="chatbubbles-outline" size={80} color="#a0a0a0" />
+          <Text style={styles.emptyText}>Please select a collection point to start chatting.</Text>
+          <TouchableOpacity style={styles.browseButton} onPress={() => navigation.navigate('Map')}>
+            <Text style={styles.browseButtonText}>Browse Collection Points</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </ImageBackground>
     );
-  };
-
-  const renderMessage = ({ item }) => {
-    const isUser = item.sender === 'user';
-    const user = MOCK_USERS[item.sender];
-
-    return (
-      <Pressable
-        style={[
-          styles.messageContainer,
-          isUser ? styles.userMessage : styles.managerMessage
-        ]}
-        onLongPress={() => handleMessageLongPress(item)}
-      >
-        {!isUser && (
-          <Image 
-            source={{ uri: user.avatar }} 
-            style={styles.avatar}
-          />
-        )}
-        <View style={styles.messageContent}>
-          {!isUser && (
-            <Text style={styles.senderName}>{user.name}</Text>
-          )}
-          {item.replyTo && (
-            <View style={styles.replyContainer}>
-              <Text style={styles.replyText}>
-                Replying to {item.replyTo.senderName}
-              </Text>
-              <Text style={styles.replyMessageText}>
-                {item.replyTo.text}
-              </Text>
-            </View>
-          )}
-          {item.isForwarded && (
-            <View style={styles.forwardedContainer}>
-              <Ionicons name="arrow-redo" size={12} color="#666" />
-              <Text style={styles.forwardedText}>Forwarded</Text>
-            </View>
-          )}
-          {item.type === 'image' ? (
-            <Image 
-              source={{ uri: item.imageUri }} 
-              style={styles.messageImage}
-            />
-          ) : (
-            <Text style={[
-              styles.messageText,
-              isUser ? styles.userMessageText : styles.managerMessageText
-            ]}>
-              {item.text}
-            </Text>
-          )}
-          {renderReactions(item.reactions)}
-          <View style={styles.messageFooter}>
-            <Text style={styles.timestamp}>
-              {new Date(item.timestamp).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </Text>
-            {isUser && renderMessageStatus(item.status)}
-          </View>
-        </View>
-      </Pressable>
-    );
-  };
+  }
 
   return (
-    <View style={styles.container}>
-     
-
-      <View style={styles.chatContainer}>
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.messagesList}
-          inverted={false}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-          keyboardShouldPersistTaps="handled"
-        />
-        
-        {isTyping && (
-          <View style={styles.typingContainer}>
-            <Text style={styles.typingText}>
-              {MOCK_USERS.manager.name} is typing...
-            </Text>
-          </View>
-        )}
-        
-        {replyTo && (
-          <View style={styles.replyBar}>
-            <View style={styles.replyContent}>
-              <Text style={styles.replyLabel}>Replying to {replyTo.senderName}</Text>
-              <Text style={styles.replyPreview}>{replyTo.text}</Text>
-            </View>
-            <TouchableOpacity onPress={() => setReplyTo(null)}>
-              <Ionicons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-      
-      <View style={styles.inputWrapper}>
-        <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.attachButton} onPress={pickImage}>
-            <Ionicons name="image" size={24} color="#2d6a4f" />
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <ImageBackground source={require('../assets/Back.png')} style={styles.container} imageStyle={{ opacity: 0.1 }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          
-          <TextInput
-            style={styles.input}
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type a message..."
-            multiline
-            onFocus={handleTyping}
-            keyboardType="default"
-            returnKeyType="send"
-            blurOnSubmit={false}
-            onSubmitEditing={sendMessage}
-          />
-          
-          <TouchableOpacity 
-            style={[
-              styles.sendButton,
-              !message.trim() && styles.sendButtonDisabled
-            ]} 
-            onPress={sendMessage}
-            disabled={!message.trim()}
-          >
-            <Ionicons 
-              name="send" 
-              size={24} 
-              color={message.trim() ? "#fff" : "#ccc"} 
-            />
+          <Image source={{ uri: users.manager.avatar }} style={styles.headerAvatar} />
+          <View>
+            <Text style={styles.headerTitle}>{pointName}</Text>
+            <Text style={styles.headerSubtitle}>{pointManager}</Text>
+          </View>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity onPress={() => navigation.navigate('ChatInfo', { user: users.manager, collectionPoint: route.params })} style={styles.headerButton}>
+            <Ionicons name="information-circle-outline" size={26} color="#333" />
           </TouchableOpacity>
         </View>
-      </View>
-
-      <Modal
-        visible={showReactions}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowReactions(false)}
-      >
-        <Pressable 
-          style={styles.modalOverlay}
-          onPress={() => setShowReactions(false)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          <View style={styles.reactionsModal}>
-            {REACTIONS.map((reaction, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.reactionButton}
-                onPress={() => handleReaction(selectedMessage?.id, reaction)}
-              >
-                <Text style={styles.reactionEmoji}>{reaction}</Text>
-              </TouchableOpacity>
-            ))}
+          {/* Chat List */}
+          <FlatList
+            data={messages}
+            renderItem={({ item }) => <MessageBubble message={item} isUser={item.sender === 'user'} user={users[item.sender]} />}
+            keyExtractor={item => item.id}
+            style={styles.chatList}
+            inverted
+            contentContainerStyle={{ paddingBottom: insets.bottom + 70, paddingTop: 10 }}
+          />
+          {/* Input Bar */}
+          <View style={[styles.inputContainer, { marginBottom: insets.bottom }]}> 
+            <TouchableOpacity style={styles.inputButton}>
+              <Ionicons name="add" size={28} color="#2d6a4f" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Type a message..."
+              value={input}
+              onChangeText={setInput}
+              multiline
+            />
+            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+              <Ionicons name="send" size={22} color="#fff" />
+            </TouchableOpacity>
           </View>
-        </Pressable>
-      </Modal>
-
-      <Modal
-        visible={showMessageOptions}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowMessageOptions(false)}
-      >
-        <Pressable 
-          style={styles.modalOverlay}
-          onPress={() => setShowMessageOptions(false)}
-        >
-          <Animated.View 
-            style={[
-              styles.messageOptionsModal,
-              {
-                transform: [{
-                  translateY: messageOptionsAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [100, 0],
-                  }),
-                }],
-              },
-            ]}
-          >
-            <TouchableOpacity 
-              style={styles.messageOption}
-              onPress={() => {
-                setReplyTo(selectedMessage);
-                setShowMessageOptions(false);
-              }}
-            >
-              <Ionicons name="arrow-undo" size={24} color="#666" />
-              <Text style={styles.messageOptionText}>Reply</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.messageOption}
-              onPress={handleForward}
-            >
-              <Ionicons name="arrow-redo" size={24} color="#666" />
-              <Text style={styles.messageOptionText}>Forward</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.messageOption}
-              onPress={() => {
-                setShowReactions(true);
-                setShowMessageOptions(false);
-              }}
-            >
-              <Ionicons name="happy" size={24} color="#666" />
-              <Text style={styles.messageOptionText}>React</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.messageOption, styles.deleteOption]}
-              onPress={handleDelete}
-            >
-              <Ionicons name="trash" size={24} color="#ff3b30" />
-              <Text style={[styles.messageOptionText, styles.deleteOptionText]}>Delete</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </Pressable>
-      </Modal>
-    </View>
+        </KeyboardAvoidingView>
+      </ImageBackground>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: '#2d6a4f',
-    padding: 15,
-    paddingTop: Platform.OS === 'ios' ? 50 : 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  chatContainer: {
-    flex: 1,
-  },
-  inputWrapper: {
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    borderRadius: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    alignItems: 'center',
-    minHeight: 60,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginHorizontal: 10,
-    maxHeight: 100,
-    minHeight: 40,
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#eef2f3' },
+  keyboardAvoidingView: { flex: 1 },
+  // Empty State
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  emptyText: { fontSize: 18, textAlign: 'center', color: '#666', marginTop: 20 },
+  browseButton: { marginTop: 30, backgroundColor: '#2d6a4f', paddingVertical: 15, paddingHorizontal: 30, borderRadius: 30 },
+  browseButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.8)', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  headerButton: { padding: 8 },
+  headerAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
+  headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#1b4332' },
+  headerSubtitle: { fontSize: 13, color: '#6c757d' },
+  // Chat List
+  chatList: { paddingHorizontal: 12, paddingTop: 10 },
+  messageRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 15 },
+  messageRowUser: { justifyContent: 'flex-end' },
+  avatar: { width: 32, height: 32, borderRadius: 16, marginRight: 8 },
+  // Bubbles
+  bubble: { maxWidth: '75%', borderRadius: 18, paddingVertical: 10, paddingHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  bubbleUser: { backgroundColor: '#2d6a4f', borderBottomRightRadius: 4 },
+  bubbleManager: { backgroundColor: '#fff', borderBottomLeftRadius: 4 },
+  bubbleTextUser: { color: '#fff', fontSize: 16 },
+  bubbleTextManager: { color: '#222', fontSize: 16 },
+  bubbleFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 6 },
+  timestamp: { fontSize: 11, color: '#a0a0a0' },
+  // Input Bar
+  inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#fff' },
+  textInput: { flex: 1, backgroundColor: '#f0f2f5', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, marginRight: 10 },
+  inputButton: { padding: 8, marginRight: 4 },
+  sendButton: { backgroundColor: '#2d6a4f', borderRadius: 22, width: 44, height: 44, justifyContent: 'center', alignItems: 'center' },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  headerButton: {
-    marginLeft: 15,
-  },
-  messagesList: {
-    padding: 15,
-    paddingBottom: 20,
-  },
-  messageContainer: {
-    flexDirection: 'row',
-    marginBottom: 15,
-    maxWidth: '85%',
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 8,
-  },
-  messageContent: {
-    flex: 1,
-  },
-  userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#2d6a4f',
-    borderRadius: 20,
-    borderTopRightRadius: 4,
-    marginLeft: 50,
-    marginRight: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  managerMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    borderTopLeftRadius: 4,
-    marginRight: 50,
-    marginLeft: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  userMessageText: {
-    color: '#fff',
-  },
-  managerMessageText: {
-    color: '#333',
-  },
-  senderName: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
-  },
-  messageText: {
-    fontSize: 16,
-    padding: 12,
-    lineHeight: 20,
-  },
-  messageFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 4,
-    paddingHorizontal: 12,
-    paddingBottom: 4,
-  },
-  timestamp: {
-    fontSize: 10,
-    color: '#666',
-    marginRight: 4,
-  },
-  typingContainer: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  typingText: {
-    fontSize: 12,
-    color: '#2d6a4f',
-    fontStyle: 'italic',
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#2d6a4f',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#f0f0f0',
-  },
-  reactionsContainer: {
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: -15,
-    right: 0,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  reactionText: {
-    fontSize: 16,
-    marginHorizontal: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  reactionsModal: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  reactionButton: {
-    padding: 10,
-  },
-  reactionEmoji: {
-    fontSize: 24,
-  },
-  messageImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
-    marginVertical: 5,
-  },
-  replyBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  replyContent: {
-    flex: 1,
-    marginRight: 10,
-  },
-  replyLabel: {
-    fontSize: 12,
-    color: '#2d6a4f',
-    fontWeight: 'bold',
-  },
-  replyPreview: {
-    fontSize: 14,
-    color: '#666',
-  },
-  replyContainer: {
-    backgroundColor: 'rgba(45, 106, 79, 0.1)',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: '#2d6a4f',
-  },
-  replyText: {
-    fontSize: 12,
-    color: '#2d6a4f',
-    fontWeight: 'bold',
-  },
-  replyMessageText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  forwardedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  forwardedText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-  },
-  messageOptionsModal: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    width: '80%',
-    maxWidth: 300,
-  },
-  messageOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  messageOptionText: {
-    fontSize: 16,
-    color: '#2d6a4f',
-    marginLeft: 15,
-  },
-  deleteOption: {
-    borderBottomWidth: 0,
-  },
-  deleteOptionText: {
-    color: '#ff3b30',
-  },
 });
 
-export default Chat; 
+export default Chat;
