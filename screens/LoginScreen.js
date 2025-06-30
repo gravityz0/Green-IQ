@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
 
@@ -154,8 +155,12 @@ const LoginScreen = ({ navigation }) => {
                   ]}
                   disabled={!email || !password}
                   onPress={() => {
-                    Alert.alert('Button pressed');
-                    navigation.navigate('Home');
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Login Button Pressed',
+                      text2: 'This will navigate to the home screen.'
+                    });
+                    navigation.replace('Home');
                   }}
                 >
                   <LinearGradient

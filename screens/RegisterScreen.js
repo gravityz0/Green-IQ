@@ -20,6 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Toast from 'react-native-toast-message';
 
 const { width, height } = Dimensions.get('window');
 
@@ -95,35 +96,26 @@ const SignUpScreen = ({ navigation }) => {
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
-      return Alert.alert("Error", "Passwords do not match");
-    }
-    
-    setIsLoading(true);
-    
-    // Button press animation
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(buttonScale, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+      Toast.show({
+        type: 'error',
+        text1: 'Password Mismatch',
+        text2: 'The passwords you entered do not match.'
+      });
+      return;
+    } else {
+      // Mock registration logic (no backend call)
       setEmail('');
       setFullName('');
       setConfirmPassword('');
       setPassword('');
-      setAcceptTerms(false);
-      Alert.alert("Success", "Registration successful!");
-    }, 2000);
+      Toast.show({
+        type: 'success',
+        text1: 'Registration Successful!',
+        text2: 'You can now log in with your new account.'
+      });
+      // Optional: navigate to login screen after a short delay
+      setTimeout(() => navigation.navigate('Login'), 1500);
+    }
   };
 
   const isFormValid = fullName && email && password && confirmPassword && acceptTerms;
