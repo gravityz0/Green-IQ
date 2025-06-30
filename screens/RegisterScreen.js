@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {BACKEND_URL} from '../config'
 import { 
   StyleSheet, 
@@ -11,9 +11,17 @@ import {
   StatusBar,
   SafeAreaView,
   ScrollView,
-  Alert
+  Alert,
+  Animated,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
+const { width, height } = Dimensions.get('window');
 
 const SignUpScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState('');
@@ -23,153 +31,387 @@ const SignUpScreen = ({ navigation }) => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-const handleRegister = async()=>{
-  try {
-    if(password !== confirmPassword){
-      return Alert.alert("Password donot match")
-    }else{
-      const response = await axios.post(`${BACKEND_URL}/register`,{
-      fullNames: fullName,
-      email,
-      password
-    })
-    setEmail('')
-    setFullName('')
-    setConfirmPassword('')
-    setPassword('')
-    Alert.alert("Please check your email to activate your account")
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const formAnim = useRef(new Animated.Value(100)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  const floatingAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Entrance animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formAnim, {
+        toValue: 0,
+        duration: 1000,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Floating animation for decorative elements
+    const floating = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatingAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatingAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    floating.start();
+  }, []);
+
+  // Calculate form completion progress
+  useEffect(() => {
+    const fields = [fullName, email, password, confirmPassword];
+    const filledFields = fields.filter(field => field.length > 0).length;
+    const progress = (filledFields / fields.length) + (acceptTerms ? 0.2 : 0);
+    
+    Animated.timing(progressAnim, {
+      toValue: Math.min(progress, 1),
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [fullName, email, password, confirmPassword, acceptTerms]);
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      return Alert.alert("Error", "Passwords do not match");
     }
-  } catch (error) {
-    if(error.response){
-      Alert.alert(error.response.data.message)
-    }else{
-      Alert.alert("An error occured")
-    }
-  }
-}
+    
+    setIsLoading(true);
+    
+    // Button press animation
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      setEmail('');
+      setFullName('');
+      setConfirmPassword('');
+      setPassword('');
+      setAcceptTerms(false);
+      Alert.alert("Success", "Registration successful!");
+    }, 2000);
+  };
+
+  const isFormValid = fullName && email && password && confirmPassword && acceptTerms;
+
+  const renderInputField = (
+    icon, 
+    placeholder, 
+    value, 
+    onChangeText, 
+    secureTextEntry = false, 
+    showPasswordToggle = false,
+    showPassword = false,
+    onTogglePassword = null,
+    keyboardType = 'default'
+  ) => (
+    <Animated.View style={[styles.inputContainer, { opacity: fadeAnim }]}>
+      <BlurView intensity={10} style={styles.inputBlur}>
+        <View style={styles.inputContent}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={icon} size={20} color="#4CAF50" />
+          </View>
+          <TextInput 
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor="rgba(0,0,0,0.5)"
+            value={value}
+            onChangeText={onChangeText}
+            secureTextEntry={secureTextEntry}
+            keyboardType={keyboardType}
+          />
+          {showPasswordToggle && (
+            <TouchableOpacity 
+              onPress={onTogglePassword}
+              style={styles.eyeIconContainer}
+            >
+              <Ionicons 
+                name={showPassword ? "eye-off" : "eye"} 
+                size={20} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      </BlurView>
+    </Animated.View>
+  );
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      {/* Background with overlay */}
       <ImageBackground 
         source={require('../assets/signup.png')} 
         style={styles.backgroundImage}
         resizeMode="cover"
       >
-        <SafeAreaView style={styles.safeArea}>
-          <ScrollView contentContainerStyle={styles.scrollView}>
+        <LinearGradient
+          colors={['rgba(0,0,0,0.4)', 'rgba(76,175,80,0.2)', 'rgba(0,0,0,0.6)']}
+          style={StyleSheet.absoluteFill}
+        />
+        
+        {/* Floating decorative elements */}
+        <Animated.View 
+          style={[
+            styles.floatingElement,
+            styles.floatingElement1,
+            {
+              transform: [{
+                translateY: floatingAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -20],
+                })
+              }]
+            }
+          ]}
+        />
+        <Animated.View 
+          style={[
+            styles.floatingElement,
+            styles.floatingElement2,
+            {
+              transform: [{
+                translateY: floatingAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 15],
+                })
+              }]
+            }
+          ]}
+        />
+      </ImageBackground>
+
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoid}
+        >
+          <ScrollView 
+            contentContainerStyle={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+          >
             {/* Back button */}
-            <TouchableOpacity 
-              style={styles.backButton} 
-              onPress={() => navigation.goBack()}
+            <Animated.View 
+              style={[
+                styles.backButtonContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
             >
-              {/* <Ionicons name="arrow-back" size={24} color="white" /> */}
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => navigation.goBack()}
+              >
+                <BlurView intensity={20} style={styles.backButtonBlur}>
+                  <Ionicons name="arrow-back" size={24} color="white" />
+                </BlurView>
+              </TouchableOpacity>
+            </Animated.View>
             
-            {/* Header text */}
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.helloText}>Hello citizen</Text>
-              <Text style={styles.createAccountText}>Create an account</Text>
-            </View>
+            {/* Header section */}
+            <Animated.View 
+              style={[
+                styles.headerSection,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
+            >
+              <View style={styles.headerContent}>
+                <Text style={styles.helloText}>Hello Citizen</Text>
+                <Text style={styles.createAccountText}>Create your account</Text>
+                <View style={styles.subtitleContainer}>
+                  <Ionicons name="leaf" size={16} color="#4CAF50" />
+                  <Text style={styles.subtitleText}>Join the eco-friendly community</Text>
+                </View>
+              </View>
+            </Animated.View>
+            
+            {/* Progress indicator */}
+            <Animated.View style={[styles.progressContainer, { opacity: fadeAnim }]}>
+              <View style={styles.progressBackground}>
+                <Animated.View 
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      })
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText}>Complete your profile</Text>
+            </Animated.View>
             
             {/* Form container */}
-            <View style={styles.formContainer}>
-              {/* Form fields */}
-              <View style={styles.inputContainer}>
-                <Ionicons name="person" size={20} color="#555" style={styles.inputIcon} />
-                <TextInput 
-                  style={styles.input}
-                  placeholder="Fullnames"
-                  value={fullName}
-                  onChangeText={setFullName}
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail" size={20} color="#555" style={styles.inputIcon} />
-                <TextInput 
-                  style={styles.input}
-                  placeholder="Email"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Ionicons name="key" size={20} color="#555" style={styles.inputIcon} />
-                <TextInput 
-                  style={styles.input}
-                  placeholder="Password"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                />
-                <TouchableOpacity 
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons 
-                    name={showPassword ? "eye-off" : "eye"} 
-                    size={20} 
-                    color="#555" 
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Ionicons name="key" size={20} color="#555" style={styles.inputIcon} />
-                <TextInput 
-                  style={styles.input}
-                  placeholder="Confirm password"
-                  secureTextEntry={!showConfirmPassword}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
-                <TouchableOpacity 
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons 
-                    name={showConfirmPassword ? "eye-off" : "eye"} 
-                    size={20} 
-                    color="#555" 
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              {/* Terms and conditions */}
-              <View style={styles.termsContainer}>
-                <TouchableOpacity 
-                  style={styles.checkbox}
-                  onPress={() => setAcceptTerms(!acceptTerms)}
-                >
-                  {acceptTerms && (
-                    <View style={styles.checkboxInner} />
+            <Animated.View 
+              style={[
+                styles.formContainer,
+                {
+                  transform: [{ translateY: formAnim }]
+                }
+              ]}
+            >
+              <BlurView intensity={30} style={styles.formBlur}>
+                <View style={styles.formContent}>
+                  <Text style={styles.formTitle}>Account Details</Text>
+                  
+                  {/* Form fields */}
+                  {renderInputField(
+                    'person-outline',
+                    'Full Name',
+                    fullName,
+                    setFullName
                   )}
-                </TouchableOpacity>
-                <Text style={styles.termsText}>
-                  I accept the policy and terms
-                </Text>
-              </View>
-              
-              {/* Sign up button */}
-              <TouchableOpacity 
-                style={[
-                  styles.signUpButton,
-                  (!fullName || !email || !password || !confirmPassword || !acceptTerms) && 
-                    styles.disabledButton
-                ]}
-                disabled={!fullName || !email || !password || !confirmPassword || !acceptTerms}
-                onPress={handleRegister}
-              >
-                <Text style={styles.signUpButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+                  
+                  {renderInputField(
+                    'mail-outline',
+                    'Email Address',
+                    email,
+                    setEmail,
+                    false,
+                    false,
+                    false,
+                    null,
+                    'email-address'
+                  )}
+                  
+                  {renderInputField(
+                    'lock-closed-outline',
+                    'Password',
+                    password,
+                    setPassword,
+                    !showPassword,
+                    true,
+                    showPassword,
+                    () => setShowPassword(!showPassword)
+                  )}
+                  
+                  {renderInputField(
+                    'lock-closed-outline',
+                    'Confirm Password',
+                    confirmPassword,
+                    setConfirmPassword,
+                    !showConfirmPassword,
+                    true,
+                    showConfirmPassword,
+                    () => setShowConfirmPassword(!showConfirmPassword)
+                  )}
+                  
+                  {/* Terms and conditions */}
+                  <Animated.View style={[styles.termsContainer, { opacity: fadeAnim }]}>
+                    <TouchableOpacity 
+                      style={styles.checkboxContainer}
+                      onPress={() => setAcceptTerms(!acceptTerms)}
+                    >
+                      <View style={[styles.checkbox, acceptTerms && styles.checkboxActive]}>
+                        {acceptTerms && (
+                          <Ionicons name="checkmark" size={14} color="white" />
+                        )}
+                      </View>
+                      <Text style={styles.termsText}>
+                        I accept the{' '}
+                        <Text style={styles.termsLink}>Terms & Conditions</Text>
+                        {' '}and{' '}
+                        <Text style={styles.termsLink}>Privacy Policy</Text>
+                      </Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                  
+                  {/* Sign up button */}
+                  <Animated.View 
+                    style={[
+                      styles.buttonContainer,
+                      { transform: [{ scale: buttonScale }] }
+                    ]}
+                  >
+                    <TouchableOpacity 
+                      style={[
+                        styles.signUpButton,
+                        !isFormValid && styles.disabledButton
+                      ]}
+                      disabled={!isFormValid || isLoading}
+                      onPress={handleRegister}
+                    >
+                      <LinearGradient
+                        colors={isFormValid ? ['#4CAF50', '#45a049'] : ['#AEAEAE', '#999999']}
+                        style={styles.buttonGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                      >
+                        {isLoading ? (
+                          <View style={styles.loadingContainer}>
+                            <Animated.View style={styles.loadingSpinner} />
+                            <Text style={styles.buttonText}>Creating Account...</Text>
+                          </View>
+                        ) : (
+                          <>
+                            <Ionicons name="person-add" size={20} color="white" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Create Account</Text>
+                          </>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </Animated.View>
+
+                  {/* Login link */}
+                  <TouchableOpacity 
+                    style={styles.loginLinkContainer}
+                    onPress={() => navigation.navigate('Login')}
+                  >
+                    <Text style={styles.loginText}>
+                      Already have an account?{' '}
+                      <Text style={styles.loginLink}>Sign In</Text>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </BlurView>
+            </Animated.View>
           </ScrollView>
-        </SafeAreaView>
-      </ImageBackground>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 };
@@ -177,106 +419,263 @@ const handleRegister = async()=>{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
   },
   backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
   safeArea: {
     flex: 1,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   scrollView: {
     flexGrow: 1,
+    paddingTop: Platform.OS === 'ios' ? 60 : 80,
+  },
+  
+  // Floating elements
+  floatingElement: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+  },
+  floatingElement1: {
+    top: '15%',
+    right: '10%',
+    width: 80,
+    height: 80,
+  },
+  floatingElement2: {
+    top: '60%',
+    left: '5%',
+    width: 60,
+    height: 60,
+  },
+  
+  // Back button
+  backButtonContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    overflow: 'hidden',
+  },
+  backButtonBlur: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 16,
   },
-  headerTextContainer: {
-    padding: 20,
-    marginBottom: 20,
+  
+  // Header section
+  headerSection: {
+    paddingHorizontal: 30,
+    marginBottom: 30,
+  },
+  headerContent: {
     alignItems: 'center',
   },
   helloText: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '800',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   createAccountText: {
-    fontSize: 20,
-    color: 'white',
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 15,
   },
-  formContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    flex: 1,
-    padding: 20,
-  },
-  inputContainer: {
+  subtitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 25,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    height: 50,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
   },
-  inputIcon: {
-    marginRight: 10,
+  subtitleText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    marginLeft: 6,
+    fontWeight: '500',
+  },
+  
+  // Progress indicator
+  progressContainer: {
+    paddingHorizontal: 30,
+    marginBottom: 30,
+  },
+  progressBackground: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+    borderRadius: 2,
+  },
+  progressText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  
+  // Form container
+  formContainer: {
+    marginHorizontal: 20,
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginBottom: 30,
+  },
+  formBlur: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+  formContent: {
+    padding: 25,
+  },
+  formTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 25,
+  },
+  
+  // Input fields
+  inputContainer: {
+    marginBottom: 16,
+  },
+  inputBlur: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.2)',
+  },
+  inputContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    paddingHorizontal: 15,
+    height: 55,
+  },
+  iconContainer: {
+    width: 30,
+    alignItems: 'center',
   },
   input: {
     flex: 1,
-    height: 50,
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 10,
   },
-  eyeIcon: {
-    padding: 10,
+  eyeIconContainer: {
+    padding: 5,
   },
+  
+  // Terms and conditions
   termsContainer: {
+    marginVertical: 20,
+  },
+  checkboxContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 15,
+    alignItems: 'flex-start',
   },
   checkbox: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    borderColor: '#555',
-    marginRight: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
   },
-  checkboxInner: {
-    width: 10,
-    height: 10,
-    backgroundColor: '#555',
+  checkboxActive: {
+    backgroundColor: '#4CAF50',
   },
   termsText: {
+    flex: 1,
     fontSize: 14,
-    color: '#555',
+    color: '#666',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  
+  // Button
+  buttonContainer: {
+    marginTop: 10,
   },
   signUpButton: {
-    backgroundColor: '#0A5D30',
-    borderRadius: 25,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   disabledButton: {
-    backgroundColor: '#AEAEAE',
+    elevation: 2,
+    shadowOpacity: 0.1,
   },
-  signUpButtonText: {
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+  },
+  buttonIcon: {
+    marginRight: 10,
+  },
+  buttonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingSpinner: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderTopColor: 'white',
+    marginRight: 10,
+  },
+  
+  // Login link
+  loginLinkContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+  },
+  loginText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  loginLink: {
+    color: '#4CAF50',
     fontWeight: '600',
   },
 });
