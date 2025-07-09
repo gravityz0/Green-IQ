@@ -20,7 +20,7 @@ const LocationSelectionScreen = ({ navigation }) => {
 
   const rwandaRegion = {
     latitude: -1.9403,
-    longitude: 29.8739,
+    longitude: 30.8739,
     latitudeDelta: 1.5,
     longitudeDelta: 1.5,
   };

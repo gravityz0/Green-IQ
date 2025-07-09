@@ -9,11 +9,11 @@ const styles = StyleSheet.create({
   landscape: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
-    height: 150,
+    width: '98%',
+    height: 151,
     backgroundColor: '#4a9e3b',
-    borderTopLeftRadius: 100,
-    borderTopRightRadius: 100,
+    borderTopLeftRadius: 101,
+    borderTopRightRadius: 102,
   },
   tree: {
     position: 'absolute',
