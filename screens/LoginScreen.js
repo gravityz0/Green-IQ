@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
+import axios from 'axios';
 import {
   StyleSheet,
   View,
@@ -45,37 +46,35 @@ const LoginScreen = ({ navigation }) => {
   const handleSignIn = async () => {
     
     if (!email || !password) {
-      Toast.show({
+        Toast.show({
         type: 'error',
         text1: 'Incomplete Fields',
         text2: 'Please enter both email and password.'
       });
       return;
     }
-
     setIsLoading(true);
-    
-    try {
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      Toast.show({
+      try {
+        const response = await axios.post('https://trash2treasure-backend.onrender.com/Login',{
+          email,
+          password
+        })
+        Toast.show({
         type: 'success',
-        text1: 'Login Successful!',
-        text2: 'Welcome back to Trash_IQ'
+        text1: 'Logged in successfully',
+        text2: 'Login successfully'
       });
-      setUser({ email });
-      // Navigate to home
-      navigation.navigate('Home');
-    } catch (error) {
-      Toast.show({
+
+      navigation.navigate('Home')
+      } catch (error) {
+        Toast.show({
         type: 'error',
-        text1: 'Login Failed',
-        text2: 'Invalid credentials. Please try again.'
+        text1: 'Invalid credentials',
+        text2: error?.response?.data?.message
       });
-    } finally {
-      setIsLoading(false);
-    }
+      }finally{
+        setIsLoading(false)
+      }
   };
 
   return (

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import { 
   StyleSheet, 
   View, 
@@ -60,14 +61,32 @@ const SignUpScreen = ({ navigation, route }) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
     setIsLoading(false);
-    
+
+    try {
+      const response = await axios.post('https://trash2treasure-backend.onrender.com/register',
+      {
+        fullNames: fullName,
+        email,
+        password,
+        userAddress: location
+      })
     Toast.show({
       type: 'success',
-      text1: 'Registration Successful!',
+      text1: 'Check your email to verify account',
       text2: 'Welcome to Trash_IQ. Please log in.'
     });
 
     setTimeout(() => navigation.navigate('Login'), 1500);
+      
+    } catch (error) {
+      Toast.show({
+      type: 'error',
+      text1: 'Registration failed',
+      text2: error.response.data.message
+    });
+    }finally{
+      setIsLoading(false)
+    }
   };
 
   return (
