@@ -72,8 +72,8 @@ const SignUpScreen = ({ navigation, route }) => {
       })
     Toast.show({
       type: 'success',
-      text1: 'Check your email to verify account',
-      text2: 'Welcome to Trash_IQ. Please log in.'
+      text1: 'Verify account',
+      text2: 'Check your email to verify your account'
     });
 
     setTimeout(() => navigation.navigate('Login'), 1500);

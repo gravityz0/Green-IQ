@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Toast from "react-native-toast-message";
 import {
   StyleSheet,
   View,
@@ -10,58 +12,108 @@ import {
   StatusBar,
   Dimensions,
   Platform,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ navigation }) => {
-  const userName = "Isaac";
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const getUserinfo = async () => {
+      try {
+        const response = await axios.get(
+          "https://trash2treasure-backend.onrender.com/userInfo"
+        );
+        setUser(response.data);
+      } catch (error) {
+        Toast.show({
+          type: "error",
+          text1: "You must login first",
+          text2: "Please login or create account first",
+        });
+        navigation.navigate("Login");
+      }
+    };
+    getUserinfo();
+  }, []);
 
   const stats = [
-    { icon: 'leaf-outline', value: '1,204', label: 'Items Recycled', color: '#2d6a4f' },
-    { icon: 'trophy-outline', value: '8,500', label: 'Eco Points', color: '#e67e22' },
-    { icon: 'people-outline', value: '#34', label: 'Community Rank', color: '#2980b9' },
-    { icon: 'flame-outline', value: '72', label: 'Streak Days', color: '#e74c3c' },
+    {
+      icon: "leaf-outline",
+      value: "1,204",
+      label: "Items Recycled",
+      color: "#2d6a4f",
+    },
+    {
+      icon: "trophy-outline",
+      value: "8,500",
+      label: "Eco Points",
+      color: "#e67e22",
+    },
+    {
+      icon: "people-outline",
+      value: "#34",
+      label: "Community Rank",
+      color: "#2980b9",
+    },
+    {
+      icon: "flame-outline",
+      value: "72",
+      label: "Streak Days",
+      color: "#e74c3c",
+    },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View>
-         
-          <Text style={styles.userName}>{userName}!</Text>
+          <Text style={styles.userName}>
+            {user ? user.fullNames : "Loading..."}
+          </Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Image
-            source={{ uri: `https://i.pravatar.cc/150?u=${userName}` }}
-            style={styles.avatar}
-          />
-        </TouchableOpacity>
+        {user ? (
+          <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+            <Image
+              source={{
+                uri: `https://trash2treasure-backend.onrender.com/${user.profilePic}`,
+              }}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
+        ) : (
+          <View>
+            <Text>Loading...</Text>
+          </View>
+        )}
       </View>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Primary Action Card */}
         <TouchableOpacity
           style={styles.primaryActionCard}
-          onPress={() => navigation.navigate('Scan')}
+          onPress={() => navigation.navigate("Scan")}
           activeOpacity={0.9}
         >
           <LinearGradient
-            colors={['#40916c', '#2d6a4f']}
+            colors={["#40916c", "#2d6a4f"]}
             style={styles.primaryActionGradient}
           >
             <View style={styles.primaryActionContent}>
               <View style={styles.primaryActionText}>
                 <Text style={styles.primaryActionTitle}>Scan New Item</Text>
-                <Text style={styles.primaryActionSubtitle}>Identify and sort waste instantly</Text>
+                <Text style={styles.primaryActionSubtitle}>
+                  Identify and sort waste instantly
+                </Text>
               </View>
               <View style={styles.primaryActionIcon}>
                 <Ionicons name="scan-outline" size={32} color="#1b4332" />
@@ -73,14 +125,25 @@ const HomeScreen = ({ navigation }) => {
         {/* Stats Carousel */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Eco-Impact</Text>
-          <ScrollView 
+          <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.statsCarousel}
           >
             {stats.map((stat, index) => (
-              <View key={index} style={[styles.statCard, { backgroundColor: stat.color + '15' }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: stat.color }]}>
+              <View
+                key={index}
+                style={[
+                  styles.statCard,
+                  { backgroundColor: stat.color + "15" },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.statIconContainer,
+                    { backgroundColor: stat.color },
+                  ]}
+                >
                   <Ionicons name={stat.icon} size={24} color="#fff" />
                 </View>
                 <Text style={styles.statValue}>{stat.value}</Text>
@@ -94,7 +157,10 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Discover</Text>
           <View style={styles.discoverGrid}>
-            <TouchableOpacity style={styles.discoverCard} onPress={() => navigation.navigate('Map')}>
+            <TouchableOpacity
+              style={styles.discoverCard}
+              onPress={() => navigation.navigate("Map")}
+            >
               <Ionicons name="map-outline" size={28} color="#1b4332" />
               <Text style={styles.discoverText}>Find Drop-off</Text>
             </TouchableOpacity>
@@ -120,35 +186,35 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   scrollContent: {
     paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 25 : 15,
+    paddingTop: Platform.OS === "android" ? 25 : 15,
     paddingBottom: 15,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: "#e9ecef",
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
   greetingText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: "#6c757d",
   },
   userName: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1b4332',
+    fontWeight: "bold",
+    color: "#1b4332",
   },
   avatar: {
     width: 50,
@@ -160,7 +226,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: 20,
     elevation: 8,
-    shadowColor: '#2d6a4f',
+    shadowColor: "#2d6a4f",
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
@@ -170,30 +236,30 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   primaryActionContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   primaryActionText: {
     flex: 1,
   },
   primaryActionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   primaryActionSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
     marginTop: 4,
   },
   primaryActionIcon: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 15,
   },
   section: {
@@ -201,8 +267,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1b4332',
+    fontWeight: "bold",
+    color: "#1b4332",
     marginHorizontal: 20,
     marginBottom: 15,
   },
@@ -214,42 +280,42 @@ const styles = StyleSheet.create({
     width: 140,
     padding: 20,
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statIconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 15,
   },
   statValue: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1b4332',
+    fontWeight: "bold",
+    color: "#1b4332",
   },
   statLabel: {
     fontSize: 13,
-    color: '#6c757d',
+    color: "#6c757d",
     marginTop: 2,
-    textAlign: 'center',
+    textAlign: "center",
   },
   discoverGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginHorizontal: 20,
   },
   discoverCard: {
     width: (width - 55) / 2,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 15,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 15,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
@@ -257,8 +323,8 @@ const styles = StyleSheet.create({
   discoverText: {
     marginTop: 10,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1b4332',
+    fontWeight: "600",
+    color: "#1b4332",
   },
 });
 
