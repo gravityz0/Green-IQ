@@ -5,6 +5,9 @@ import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CollectionPoints from '../screens/CollectionPoints';
 import Achievements from '../screens/Achievements';
+import ScanChoiceScreen from '../screens/ScanChoiceScreen';
+import ProductScanScreen from '../screens/ProductScanScreen';
+import ScanScreen from '../screens/ScanScreen';
 import { Text, View } from 'react-native';
 
 const Stack = createStackNavigator();
@@ -24,6 +27,9 @@ export default function AppNavigator() {
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ScanChoice" component={ScanChoiceScreen} options={{ title: 'Scan Options' }} />
+      <Stack.Screen name="Scan" component={ScanScreen} options={{ title: 'Upload Waste Image' }} />
+      <Stack.Screen name="ProductScan" component={ProductScanScreen} options={{ title: 'Scan Product' }} />
       <Stack.Screen 
         name="CollectionPoints" 
         component={CollectionPoints} 

@@ -256,7 +256,7 @@ const HomeScreen = ({ navigation }) => {
   const progress = user?.ecoPoints ? Math.min(user.ecoPoints / 1000, 1) : 0.1;
 
   const quickActions = [
-    { icon: "scan-outline", label: "Scan", action: () => navigation.navigate("Scan") },
+    { icon: "scan-outline", label: "Scan", action: () => navigation.navigate("ScanChoice") },
     { icon: "map-outline", label: "Map", action: () => navigation.navigate("Map") },
     { icon: "qr-code-outline", label: "Redeem", action: () => navigation.navigate("Rewards") },
     { icon: "settings-outline", label: "Settings", action: () => navigation.navigate("Settings") },
@@ -396,7 +396,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
         {/* Quick Links */}
         <View style={compactQuickLinksRow}>
-          {[{ icon: 'scan-outline', label: 'Scan', nav: 'Scan' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
+          {[{ icon: 'scan-outline', label: 'Scan', nav: 'ScanChoice' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
             <TouchableOpacity key={item.label} style={styles.quickLinkButton} onPress={() => navigation.navigate(item.nav)} activeOpacity={0.85}>
               <View style={compactQuickLinkIconWrap}>
                 <Ionicons name={item.icon} size={isTablet ? 20 : 16} color="#1B5E20" />
