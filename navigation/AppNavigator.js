@@ -4,8 +4,19 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CollectionPoints from '../screens/CollectionPoints';
+import Achievements from '../screens/Achievements';
+import { Text, View } from 'react-native';
 
 const Stack = createStackNavigator();
+
+// Placeholder Challenges screen
+function ChallengesScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Challenges Screen (Placeholder)</Text>
+    </View>
+  );
+}
 
 export default function AppNavigator() {
   return (
@@ -27,6 +38,8 @@ export default function AppNavigator() {
           },
         }} 
       />
+      <Stack.Screen name="Challenges" component={ChallengesScreen} options={{ title: 'Challenges' }} />
+      <Stack.Screen name="Achievements" component={Achievements} options={{ title: 'Achievements', headerShown: false }} />
     </Stack.Navigator>
   );
 }

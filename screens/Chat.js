@@ -76,9 +76,30 @@ const Chat = ({ route, navigation }) => {
     navigation.setOptions({
       title: pointName,
       headerStyle: {
-        backgroundColor: '#2d6a4f',
+        backgroundColor: '#fff',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
       },
-      headerTintColor: '#fff',
+      headerTitleAlign: 'center',
+      headerTitleStyle: {
+        color: '#1B5E20',
+        fontWeight: 'bold',
+        fontSize: 18,
+        letterSpacing: 0.5,
+      },
+      headerLeft: () => (
+        <TouchableOpacity
+          style={{ marginLeft: 10, backgroundColor: '#e0f7fa', borderRadius: 18, padding: 6 }}
+          onPress={() => navigation.navigate('Home')}
+          accessibilityLabel="Back to Home"
+        >
+          <Ionicons name="arrow-back" size={24} color="#00C896" />
+        </TouchableOpacity>
+      ),
       headerRight: () => (
         <View style={styles.headerRight}>
           <TouchableOpacity

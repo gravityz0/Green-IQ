@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { UserContext } from "../context/UserContext";
+import { LinearGradient } from 'expo-linear-gradient';
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -54,6 +55,40 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.userHandle}>
           {user ? user.email : "Loading..."}
         </Text>
+        {/* Eco Points Card */}
+        <LinearGradient colors={["#e0f7fa", "#fff"]} style={styles.ecoPointsCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="leaf" size={28} color="#00C896" style={{ marginRight: 10 }} />
+            <View>
+              <Text style={{ color: '#00C896', fontWeight: 'bold', fontSize: 18 }}>Eco Points</Text>
+              <Text style={{ color: '#1B5E20', fontWeight: 'bold', fontSize: 28 }}>{user ? user.ecoPoints || 1000 : '...'}</Text>
+            </View>
+          </View>
+          {/* Progress bar to next badge */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ color: '#888', fontSize: 13, marginBottom: 2 }}>Progress to next badge</Text>
+            <View style={{ height: 12, backgroundColor: '#e0e0e0', borderRadius: 8, overflow: 'hidden' }}>
+              <LinearGradient
+                colors={["#00C896", "#00A578"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ width: `${user && user.ecoPoints ? Math.min(user.ecoPoints / 5, 100) : 10}%`, height: 12 }}
+              />
+            </View>
+            <Text style={{ color: '#1B5E20', fontSize: 12, marginTop: 2 }}>Earn 5 more points for your next badge!</Text>
+          </View>
+          {/* Interactive buttons */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Achievements')}>
+              <Ionicons name="medal-outline" size={20} color="#00C896" />
+              <Text style={styles.actionButtonText}>Achievements</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('EcoPointsDetails')}>
+              <Ionicons name="analytics-outline" size={20} color="#00C896" />
+              <Text style={styles.actionButtonText}>Eco Points</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
 
       <View style={styles.menuContainer}>
@@ -140,6 +175,34 @@ const styles = StyleSheet.create({
   logoutButton: {
     borderBottomWidth: 0,
     marginTop: 20,
+  },
+  ecoPointsCard: {
+    marginTop: 18,
+    width: '90%',
+    alignSelf: 'center',
+    borderRadius: 18,
+    padding: 18,
+    elevation: 3,
+    shadowColor: '#00C896',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    marginBottom: 10,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
+    elevation: 1,
+  },
+  actionButtonText: {
+    color: '#00C896',
+    fontWeight: 'bold',
+    marginLeft: 6,
+    fontSize: 15,
   },
 });
 

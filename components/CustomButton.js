@@ -1,18 +1,29 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { globalStyles } from '../styles/globalStyles';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-export default function HomeScreen() {
+export default function CustomButton({ label, onPress, style, textStyle, ...props }) {
   return (
-    <View style={[globalStyles.container, styles.container]}>
-      <Text style={globalStyles.title}>Welcome to Home Screen!</Text>
-    </View>
+    <TouchableOpacity style={[styles.button, style]} onPress={onPress} activeOpacity={0.85} {...props}>
+      <Text style={[styles.buttonText, textStyle]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
+  button: {
+    backgroundColor: '#1B5E20',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
+    elevation: 2,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
 });
