@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView, Alert, Modal, Linking } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SearchBar } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +47,12 @@ const RwandaMap = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [notifVisible, setNotifVisible] = useState(false);
+  const dummyNotifications = [
+    { id: 1, text: 'Heavy rainfall expected in Gasabo. Safe zones open for shelter.' },
+    { id: 2, text: 'Flood risk near Nyarugenge Waste Hub. Use alternate safe zone.' },
+    { id: 3, text: 'Heatwave alert: Stay hydrated and visit safe zones for cooling.' },
+  ];
 
   const rwandaCenter = { latitude: -1.9403, longitude: 29.8739 };
   const rwandaRegion = {
@@ -118,10 +124,38 @@ const RwandaMap = () => {
 
   return (
     <View style={styles.container}>
+      {/* Top bar with notification bell */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 44, paddingBottom: 10, backgroundColor: '#1B5E20', paddingHorizontal: 10 }}>
+        <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold', letterSpacing: 1 }}>Safe Zones</Text>
+        <TouchableOpacity onPress={() => setNotifVisible(true)} style={{ padding: 6 }}>
+          <Ionicons name="notifications-outline" size={26} color="#fff" />
+          <View style={{ position: 'absolute', top: 2, right: 2, backgroundColor: '#FF5722', borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{dummyNotifications.length}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+      {/* Floating Notification Panel */}
+      {notifVisible && (
+        <View style={{ position: 'absolute', top: 80, right: 18, backgroundColor: '#fff', borderRadius: 14, elevation: 6, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, width: 280, zIndex: 20, padding: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <Ionicons name="notifications" size={20} color="#FF5722" style={{ marginRight: 6 }} />
+            <Text style={{ fontWeight: 'bold', color: '#1B5E20', fontSize: 15 }}>Notifications</Text>
+            <TouchableOpacity onPress={() => setNotifVisible(false)} style={{ marginLeft: 'auto', padding: 4 }}>
+              <Ionicons name="close" size={18} color="#888" />
+            </TouchableOpacity>
+          </View>
+          {dummyNotifications.map(n => (
+            <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+              <Ionicons name="alert-circle-outline" size={16} color="#FF5722" style={{ marginRight: 6 }} />
+              <Text style={{ color: '#333', fontSize: 13 }}>{n.text}</Text>
+            </View>
+          ))}
+        </View>
+      )}
       <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
-        style={styles.map}
+        style={{ flex: 1 }}
         initialRegion={rwandaRegion}
         mapType="standard"
         showsUserLocation={true}
@@ -135,14 +169,17 @@ const RwandaMap = () => {
             description={point.description}
             onPress={() => handleMarkerClick(point)}
           >
-            <View style={styles.markerContainer}>
-              <View style={styles.markerInner}>
-                <Ionicons name="location" size={24} color="#fff" />
+            {/* Distinct Safe Zone Marker */}
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{
+                width: 38, height: 38, borderRadius: 19, backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#00C896',
+              }}>
+                <Ionicons name="shield" size={22} color="#1B5E20" />
               </View>
             </View>
             <Callout tooltip>
               <View style={styles.calloutContainer}>
-                <Text style={styles.calloutTitle}>{point.name}</Text>
+                <Text style={styles.calloutTitle}>{point.name} <Text style={{ color: '#00C896', fontWeight: 'bold' }}>[Safe Zone]</Text></Text>
                 <Text style={styles.calloutDescription}>{point.description}</Text>
                 <Text style={styles.calloutText}>District: {point.district}</Text>
                 <Text style={styles.calloutText}>Sector: {point.sector}</Text>
@@ -150,11 +187,21 @@ const RwandaMap = () => {
                 <Text style={styles.calloutText}>Hours: {point.hours}</Text>
                 <Text style={styles.calloutText}>Contact: {point.contact}</Text>
                 <TouchableOpacity 
-                  style={styles.joinChatButton}
+                  style={[styles.joinChatButton, { backgroundColor: '#00C896', marginBottom: 6 }]}
                   onPress={() => handleMarkerClick(point)}
                 >
                   <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
                   <Text style={styles.joinChatText}>Join Chat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.joinChatButton, { backgroundColor: '#1B5E20' }]}
+                  onPress={() => {
+                    const url = `https://www.google.com/maps/dir/?api=1&destination=${point.coords.latitude},${point.coords.longitude}`;
+                    Linking.openURL(url);
+                  }}
+                >
+                  <Ionicons name="navigate" size={20} color="#fff" />
+                  <Text style={styles.joinChatText}>Get Directions</Text>
                 </TouchableOpacity>
               </View>
             </Callout>
@@ -279,10 +326,12 @@ const RwandaMap = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8fffe',
   },
   map: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   searchContainer: {
     position: 'absolute',

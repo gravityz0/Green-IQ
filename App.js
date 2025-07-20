@@ -24,6 +24,9 @@ import EcoPointsDetails from './screens/EcoPointsDetails';
 import Leaderboard from './screens/Leaderboard';
 import Community from './screens/Community';
 import Rewards from './screens/Rewards';
+import ReferralScreen from './screens/ReferralScreen';
+import SafeZoneAlerts from './screens/SafeZoneAlerts';
+import SafeZonesMap from './screens/SafeZonesMap';
 
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -173,6 +176,7 @@ function AppTabs() {
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+        tabBarLabelPosition: 'below-icon', // <-- force vertical layout
         tabBarStyle: route.name === 'Chat'
           ? { display: 'none' }
           : {
@@ -184,10 +188,12 @@ function AppTabs() {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Map" component={CollectionPoints} options={{ tabBarLabel: 'Map' }} />
+      <Tab.Screen name="Map" component={SafeZonesMap} options={{ tabBarLabel: 'Safe Zones', tabBarIcon: ({ color, size, focused }) => (
+        <Ionicons name={focused ? 'shield' : 'shield-outline'} size={size} color={color} />
+      ) }} />
       <Tab.Screen name="Scan" component={ScanScreen} options={{ tabBarLabel: 'Scan' }} />
       <Tab.Screen name="RewardsTab" component={Rewards} options={{ tabBarLabel: 'Rewards' }} />
-      <Tab.Screen name="Chat" component={Chat} options={{ tabBarLabel: 'Community' }} />
+      <Tab.Screen name="Chat" component={CollectionPoints} options={{ tabBarLabel: 'Community' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -222,6 +228,9 @@ function App() {
           <Stack.Screen name="Leaderboard" component={Leaderboard} />
           <Stack.Screen name="Community" component={Community} />
           <Stack.Screen name="Rewards" component={Rewards} />
+          <Stack.Screen name="Referral" component={ReferralScreen} />
+          <Stack.Screen name="SafeZoneAlerts" component={SafeZoneAlerts} />
+          <Stack.Screen name="SafeZonesMap" component={SafeZonesMap} />
 
         </Stack.Navigator>
       </NavigationContainer>

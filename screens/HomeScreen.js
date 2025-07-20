@@ -396,7 +396,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
         {/* Quick Links */}
         <View style={compactQuickLinksRow}>
-          {[{ icon: 'scan-outline', label: 'Scan', nav: 'Scan' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Community' }].map((item, idx) => (
+          {[{ icon: 'scan-outline', label: 'Scan', nav: 'Scan' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
             <TouchableOpacity key={item.label} style={styles.quickLinkButton} onPress={() => navigation.navigate(item.nav)} activeOpacity={0.85}>
               <View style={compactQuickLinkIconWrap}>
                 <Ionicons name={item.icon} size={isTablet ? 20 : 16} color="#1B5E20" />

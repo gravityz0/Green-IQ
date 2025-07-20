@@ -108,6 +108,10 @@ const ProfileScreen = ({ navigation }) => {
           <Ionicons name="help-circle-outline" size={24} color="#1b4332" />
           <Text style={styles.menuItemText}>Help Center</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Referral')}>
+          <Ionicons name="people-outline" size={24} color="#1b4332" />
+          <Text style={styles.menuItemText}>Invite Friends</Text>
+        </TouchableOpacity>
         {/* {userEmail.endsWith("@rca.com") && (
           <TouchableOpacity
             style={styles.menuItem}

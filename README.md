@@ -21,28 +21,35 @@ Trash_IQ is a modern, mobile-first React Native app (built with Expo) focused on
 ## Features
 - **User Authentication**: Register, login, and manage user sessions (with context and secure storage).
 - **Home Dashboard**: Personalized stats, eco-impact, and quick actions.
+- **EcoPoints Rewards & Marketplace**: Redeem eco points for certificates, products, and more. View available rewards and your redemption history.
+- **Referral System**: Invite friends with your referral code, copy/share your code, and earn bonus points for each signup.
+- **Leaderboard**: See the top recyclers and your rank, with avatars and medals for the top users.
+- **Community**: Join the community chat, connect with other users, and share tips.
+- **Safe Zones**: Interactive map of collection points, now labeled as "Safe Zones" in the app, with search and chat for each location.
 - **AI-Powered Scan**: Use the device camera to take and upload photos of waste for classification (ML integration ready).
-- **Map of Collection Points**: Interactive map with all waste collection points, search, and join chat for each point.
-- **Real-Time Chat**: Modern, immersive chat UI for users and collection point managers, with avatars, reactions, and media support.
-- **Government Dashboard**: Advanced analytics, collection point management, and activity logs (restricted to @rca.com users).
-- **Profile & Settings**: Edit profile, manage notifications, and access the government dashboard if eligible.
+- **Profile & Settings**: Edit profile, view eco points, referral code, and access all your achievements and rewards.
 - **Onboarding & Welcome**: Animated, feature-rich welcome screen with testimonials and app highlights.
+- **Tablet Support**: Responsive layouts and tab bar for tablets and large screens.
 
 ---
 
 ## Screens & Navigation
 - **WelcomeScreen**: Animated intro, feature highlights, testimonials, and navigation to login/register.
 - **LoginScreen / RegisterScreen**: Auth forms with validation, context, and secure storage.
-- **HomeScreen**: User stats, eco-impact, and quick links to scan, map, and community features.
+- **HomeScreen**: User stats, eco-impact, quick links, featured rewards, and access to all new features.
 - **ScanScreen**: Camera interface for taking, previewing, and uploading multiple waste photos.
-- **CollectionPoints**: Map of all collection points, search, and join chat for each location.
+- **CollectionPoints (Safe Zones)**: Map of all collection points, search, and join chat for each location.
 - **Chat**: Social-style chat with avatars, reactions, media, and immersive UI.
-- **ProfileScreen**: User info, settings, and (for @rca.com) access to the government dashboard.
+- **ProfileScreen**: User info, eco points, referral code, invite friends, and settings.
+- **Rewards**: Browse and redeem eco points for certificates, products, and more.
+- **ReferralScreen**: View, copy, and share your referral code. Invite friends and earn points.
+- **Leaderboard**: See the top recyclers and your rank, with avatars and medals.
+- **Community**: Join the community chat and connect with other users.
 - **Dashboard**: Government-only analytics, charts, collection point management, and activity logs.
 - **LocationSelectionScreen**: Select location during registration.
 - **ChatInfo**: Details about the chat/collection point manager.
 
-Navigation is managed via React Navigation (stack and bottom tabs). The tab bar is hidden for immersive screens (e.g., chat).
+Navigation is managed via React Navigation (stack and bottom tabs). The bottom tab bar now features icons and descriptive labels (Home, Safe Zones, Scan, Rewards, Community, Profile) with a consistent vertical layout on all devices, including tablets.
 
 ---
 
