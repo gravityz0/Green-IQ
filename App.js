@@ -85,7 +85,7 @@ function App() {
           {/* Auth screens */}
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
+          <Stack.Screen name="Register" component={SignupScreen} />
           <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
           
           {/* Main app screens (with tab bar) */}

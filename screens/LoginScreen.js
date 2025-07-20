@@ -9,276 +9,320 @@ import {
   StatusBar,
   SafeAreaView,
   ScrollView,
-  Alert,
   Animated,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '../context/UserContext';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [screenData, setScreenData] = useState(Dimensions.get('window'));
 
   // Animations
   const formAnim = useRef(new Animated.Value(0)).current;
-  
+  const logoAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const { setUser } = useContext(UserContext);
 
+  const window = useWindowDimensions();
+  const isTablet = window.width >= 700;
+  const isLandscape = window.width > window.height;
+
+  // Handle screen orientation changes
   useEffect(() => {
-    Animated.timing(formAnim, {
-      toValue: 1,
-      duration: 800,
-      delay: 300,
-      useNativeDriver: true,
-    }).start();
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenData(window);
+    });
+    return () => subscription?.remove();
+  }, []);
+
+  useEffect(() => {
+    // Staggered animations for better UX
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoAnim, {
+        toValue: 1,
+        duration: 800,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(formAnim, {
+        toValue: 1,
+        duration: 1000,
+        delay: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const handleSignIn = async () => {
-    
     if (!email || !password) {
-        Toast.show({
+      Toast.show({
         type: 'error',
         text1: 'Incomplete Fields',
-        text2: 'Please enter both email and password.'
+        text2: 'Please enter both email and password.',
+        position: 'top',
       });
       return;
     }
     setIsLoading(true);
-      try {
-        const response = await axios.post('https://trash2treasure-backend.onrender.com/Login',{
-          email,
-          password
-        })
-        Toast.show({
+    try {
+      const response = await axios.post('https://trash2treasure-backend.onrender.com/Login', {
+        email,
+        password
+      });
+      Toast.show({
         type: 'success',
-        text1: 'Logged in successfully',
-        text2: 'Login successfully'
+        text1: 'Welcome Back!',
+        text2: 'Login successful',
+        position: 'top',
       });
-
-      navigation.navigate('Home')
-      } catch (error) {
-        Toast.show({
+      navigation.navigate('Home');
+    } catch (error) {
+      Toast.show({
         type: 'error',
-        text1: 'Invalid credentials',
-        text2: error?.response?.data?.message
+        text1: 'Login Failed',
+        text2: error?.response?.data?.message || 'Invalid credentials',
+        position: 'top',
       });
-      }finally{
-        setIsLoading(false)
-      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const isSmallScreen = screenData.width < 400 || screenData.height < 700;
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      
-      {/* Background Image */}
-      <ImageBackground
-        source={require('../assets/signup.png')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay} />
-      </ImageBackground>
-
+    <LinearGradient
+      colors={["#43e97b", "#11998e"]}
+      style={styles.container}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor="#43e97b" />
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>Welcome Back!</Text>
-          <Text style={styles.headerSubtitle}>
-            Sign in to continue your eco-journey
-          </Text>
-        </View>
-
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollViewContent}
-            bounces={false}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Form Container */}
-            <Animated.View
-              style={[
-                styles.formContainer,
-                {
-                  opacity: formAnim,
-                  transform: [
-                    {
-                      translateY: formAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [50, 0],
-                      }),
-                    },
-                  ],
-                },
+          <View style={[styles.centerWrapper, isTablet && styles.centerWrapperTablet]}> {/* Center everything */}
+            <ScrollView
+              contentContainerStyle={[
+                styles.scrollViewContent,
+                isLandscape && styles.landscapeContent,
+                isTablet && styles.scrollViewContentTablet,
               ]}
+              bounces={false}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              <View style={styles.formContent}>
-                {/* Email Input */}
-                <View style={styles.inputContainer}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color="rgba(255,255,255,0.7)"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Email Address"
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-
-                {/* Password Input */}
-                <View style={styles.inputContainer}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color="rgba(255,255,255,0.7)"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="rgba(255,255,255,0.5)"
-                    secureTextEntry={!showPassword}
-                    value={password}
-                    onChangeText={setPassword}
-                    autoCorrect={false}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons
-                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                      size={22}
-                      color="rgba(255,255,255,0.7)"
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity 
-                  style={styles.forgotPasswordButton}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Text style={styles.forgotPasswordText}>
-                    Forgot Password?
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Sign In Button - Simplified structure */}
-                <TouchableOpacity
+              {/* Header Section */}
+              <Animated.View
+                style={[
+                  styles.headerContainer,
+                  isTablet && styles.headerContainerTablet,
+                  { opacity: fadeAnim }
+                ]}
+              >
+                <Animated.View
                   style={[
-                    styles.signInButton,
-                    (!email || !password) && styles.disabledButton,
+                    styles.logoContainer,
+                    isTablet && styles.logoContainerTablet,
+                    {
+                      opacity: logoAnim,
+                      transform: [
+                        {
+                          scale: logoAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.5, 1],
+                          }),
+                        },
+                        {
+                          translateY: logoAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-20, 0],
+                          }),
+                        },
+                      ],
+                    },
                   ]}
-                  disabled={!email || !password || isLoading}
-                  onPress={handleSignIn}
-                  activeOpacity={0.8}
-                  hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
                 >
-                  <LinearGradient
-                    colors={
-                      !email || !password
-                        ? ['#666', '#444']
-                        : ['#4CAF50', '#45a049']
-                    }
-                    style={styles.signInGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={styles.signInButtonText}>
-                      {isLoading ? 'Signing In...' : 'Sign In'}
-                    </Text>
-                    {!isLoading && (
+                  <Ionicons name="leaf" size={isTablet ? 70 : isSmallScreen ? 40 : 50} color="#11998e" style={styles.logoIcon} />
+                  <Text style={[styles.appName, isSmallScreen && styles.appNameSmall, isTablet && styles.appNameTablet]}>
+                    Green IQ
+                  </Text>
+                </Animated.View>
+                <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall, isTablet && styles.headerTitleTablet]}>
+                  Welcome Back!
+                </Text>
+                <Text style={[styles.headerSubtitle, isSmallScreen && styles.headerSubtitleSmall, isTablet && styles.headerSubtitleTablet]}>
+                  Sign in to continue your sustainable journey
+                </Text>
+              </Animated.View>
+
+              {/* Form Section */}
+              <Animated.View
+                style={[
+                  styles.formContainer,
+                  isLandscape && styles.formContainerLandscape,
+                  isSmallScreen && styles.formContainerSmall,
+                  isTablet && styles.formContainerTablet,
+                  {
+                    opacity: formAnim,
+                    transform: [
+                      {
+                        translateY: formAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [50, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <View style={[styles.formContent, isSmallScreen && styles.formContentSmall, isTablet && styles.formContentTablet]}>
+                  {/* Email Input */}
+                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                    <Ionicons
+                      name="mail-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}
+                      placeholder="Email Address"
+                      placeholderTextColor="#888"
+                      keyboardType="email-address"
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                  {/* Password Input */}
+                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}
+                      placeholder="Password"
+                      placeholderTextColor="#888"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      autoCorrect={false}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeButton}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
                       <Ionicons
-                        name="arrow-forward-outline"
-                        size={20}
-                        color="#fff"
+                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
                       />
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                {/* Divider */}
-                <View style={styles.dividerContainer}>
-                  <View style={styles.divider} />
-                  <Text style={styles.dividerText}>or</Text>
-                  <View style={styles.divider} />
+                    </TouchableOpacity>
+                  </View>
+                  {/* Forgot Password Link */}
+                  <TouchableOpacity 
+                    style={styles.forgotPasswordButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Text style={[styles.forgotPasswordLink, isSmallScreen && styles.forgotPasswordLinkSmall, isTablet && styles.forgotPasswordLinkTablet]}>
+                      Forgot Password?
+                    </Text>
+                  </TouchableOpacity>
+                  {/* Sign In Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.signInButton,
+                      isSmallScreen && styles.signInButtonSmall,
+                      isTablet && styles.signInButtonTablet,
+                      (!email || !password) && styles.disabledButton,
+                    ]}
+                    disabled={!email || !password || isLoading}
+                    onPress={handleSignIn}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={['#43e97b', '#11998e']}
+                      style={[styles.signInGradient, isSmallScreen && styles.signInGradientSmall, isTablet && styles.signInGradientTablet]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <Text style={[styles.signInButtonText, isSmallScreen && styles.signInButtonTextSmall, isTablet && styles.signInButtonTextTablet]}>
+                        {isLoading ? 'Signing In...' : 'Sign In'}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                  {/* Divider */}
+                  <View style={styles.dividerContainer}>
+                    <View style={styles.divider} />
+                    <Text style={[styles.dividerText, isSmallScreen && styles.dividerTextSmall, isTablet && styles.dividerTextTablet]}>
+                      or continue with
+                    </Text>
+                    <View style={styles.divider} />
+                  </View>
+                  {/* Social Login Buttons */}
+                  <View style={[styles.socialLoginContainer, isSmallScreen && styles.socialLoginContainerSmall, isTablet && styles.socialLoginContainerTablet]}>
+                    {[
+                      { name: 'logo-google', color: '#ea4335' },
+                      { name: 'logo-apple', color: '#000' },
+                      { name: 'logo-facebook', color: '#1877f2' },
+                      { name: 'logo-github', color: '#333' },
+                    ].map((social, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[styles.socialButton, isSmallScreen && styles.socialButtonSmall, isTablet && styles.socialButtonTablet]}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name={social.name}
+                          size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                          color={social.color}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* Sign Up Link */}
+                  <View style={styles.signUpContainer}>
+                    <Text style={[styles.signUpText, isSmallScreen && styles.signUpTextSmall, isTablet && styles.signUpTextTablet]}>
+                      Don't have an account?{' '}
+                    </Text>
+                    <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => navigation.navigate('Register')}>
+                      <Text style={[styles.signUpLink, isSmallScreen && styles.signUpLinkSmall, isTablet && styles.signUpLinkTablet]}>
+                        Sign Up
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-
-                {/* Social Logins */}
-                <View style={styles.socialLoginContainer}>
-                  <TouchableOpacity 
-                    style={styles.socialButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="logo-google" size={24} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.socialButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="logo-apple" size={24} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.socialButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="logo-facebook" size={24} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.socialButton}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="logo-twitter" size={24} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Quick Login for Testing */}
-                <TouchableOpacity
-                  style={styles.quickLoginButton}
-                  onPress={() => {
-                    setEmail('test@example.com');
-                    setPassword('password123');
-                  }}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <Text style={styles.quickLoginText}>Quick Fill (For Testing)</Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-          </ScrollView>
+              </Animated.View>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-      
-      {/* Toast Message Component */}
       <Toast />
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -286,151 +330,357 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 77, 64, 0.6)',
-  },
   safeArea: {
     flex: 1,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
+  centerWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerWrapperTablet: {
+    minHeight: height * 0.9,
+  },
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 25,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
+  scrollViewContentTablet: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  landscapeContent: {
+    paddingHorizontal: 40,
+  },
+  // Header Styles
   headerContainer: {
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 20 : 40,
-    paddingBottom: 20,
+    marginBottom: 36,
+  },
+  headerContainerSmall: {
+    marginBottom: 24,
+  },
+  headerContainerTablet: {
+    marginBottom: 48,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logoContainerTablet: {
+    marginBottom: 18,
+  },
+  logoIcon: {
+    marginBottom: 6,
+  },
+  appName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#fff',
+    letterSpacing: 1.5,
+  },
+  appNameSmall: {
+    fontSize: 20,
+  },
+  appNameTablet: {
+    fontSize: 36,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 10,
+    color: '#fff',
+    marginBottom: 6,
     textAlign: 'center',
+  },
+  headerTitleSmall: {
+    fontSize: 22,
+  },
+  headerTitleTablet: {
+    fontSize: 40,
+    marginBottom: 10,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
+    color: '#11998e',
     textAlign: 'center',
     paddingHorizontal: 20,
+    lineHeight: 20,
+    fontWeight: '500',
   },
+  headerSubtitleSmall: {
+    fontSize: 13,
+    paddingHorizontal: 30,
+  },
+  headerSubtitleTablet: {
+    fontSize: 20,
+    paddingHorizontal: 40,
+  },
+  // Form Styles
   formContainer: {
-    width: '100%',
-    maxWidth: 400,
+    width: '90%',
+    maxWidth: 600,
+    minWidth: 320,
     alignSelf: 'center',
+    marginVertical: 32,
+  },
+  formContainerLandscape: {
+    maxWidth: 700,
+  },
+  formContainerSmall: {
+    maxWidth: 350,
+  },
+  formContainerTablet: {
+    maxWidth: 700,
+    minWidth: 400,
   },
   formContent: {
-    backgroundColor: 'rgba(255,255,255,0.15)', // Semi-transparent background
-    padding: 25,
-    borderRadius: 20,
+    backgroundColor: '#fff',
+    paddingVertical: 36,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.13,
+    shadowRadius: 24,
+    elevation: 10,
   },
+  formContentSmall: {
+    padding: 16,
+    borderRadius: 14,
+  },
+  formContentTablet: {
+    paddingVertical: 48,
+    paddingHorizontal: 48,
+    borderRadius: 32,
+  },
+  // Input Styles
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    height: 55,
+    marginBottom: 20,
+    paddingHorizontal: 12,
+    borderWidth: 1.2,
+    borderColor: '#e0e0e0',
+    height: 48,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  inputContainerSmall: {
+    height: 42,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  inputContainerTablet: {
+    height: 60,
+    borderRadius: 18,
+    marginBottom: 28,
+    paddingHorizontal: 18,
   },
   inputIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    height: 50,
-    color: 'white',
-    fontSize: 16,
+    color: '#222',
+    fontSize: 15,
+  },
+  inputSmall: {
+    fontSize: 13,
+  },
+  inputTablet: {
+    fontSize: 20,
   },
   eyeButton: {
-    padding: 5, // Added padding for better touch area
+    padding: 6,
+    marginLeft: 4,
   },
+  // Button Styles
   forgotPasswordButton: {
     alignSelf: 'flex-end',
-    marginBottom: 20,
-    padding: 5, // Added padding for better touch area
+    marginBottom: 18,
+    paddingVertical: 2,
   },
   forgotPasswordText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 14,
+    color: '#11998e',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  forgotPasswordTextSmall: {
+    fontSize: 12,
+  },
+  forgotPasswordTextTablet: {
+    fontSize: 16,
   },
   signInButton: {
-    borderRadius: 12,
+    borderRadius: 24,
     overflow: 'hidden',
-    marginVertical: 10, // Added margin for better spacing
-    shadowColor: '#000',
+    marginBottom: 24,
+    shadowColor: '#11998e',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  signInButtonSmall: {
+    borderRadius: 14,
+    marginBottom: 16,
+  },
+  signInButtonTablet: {
+    borderRadius: 32,
+    marginBottom: 32,
   },
   disabledButton: {
     shadowOpacity: 0.1,
-    elevation: 2,
+    elevation: 1,
+    opacity: 0.7,
   },
   signInGradient: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    width: '100%',
-    borderRadius: 12,
-    minHeight: 50, // Minimum height for better touch
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 24,
+  },
+  signInGradientSmall: {
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+  },
+  signInGradientTablet: {
+    paddingVertical: 20,
+    paddingHorizontal: 32,
+    borderRadius: 32,
   },
   signInButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-    marginRight: 10,
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
+  signInButtonTextSmall: {
+    fontSize: 14,
+  },
+  signInButtonTextTablet: {
+    fontSize: 22,
+  },
+  // Divider Styles
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 25,
+    marginVertical: 18,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#e0e0e0',
   },
   dividerText: {
-    color: 'rgba(255,255,255,0.5)',
-    marginHorizontal: 15,
-    fontSize: 14,
+    color: '#888',
+    marginHorizontal: 12,
+    fontSize: 13,
+    fontWeight: '500',
   },
+  dividerTextSmall: {
+    fontSize: 12,
+    marginHorizontal: 8,
+  },
+  dividerTextTablet: {
+    fontSize: 16,
+    marginHorizontal: 18,
+  },
+  // Social Login Styles
   socialLoginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
+    gap: 12,
+  },
+  socialLoginContainerSmall: {
+    gap: 8,
+  },
+  socialLoginContainerTablet: {
+    gap: 20,
+    marginBottom: 28,
   },
   socialButton: {
-    width: 60, // Increased size for better touch
-    height: 60, // Increased size for better touch
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  quickLoginButton: {
-    alignSelf: 'center',
-    padding: 10,
-    marginTop: 10,
+  socialButtonSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
-  quickLoginText: {
-    color: 'rgba(255,255,255,0.6)',
+  socialButtonTablet: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  // Sign Up Styles
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  signUpText: {
+    color: '#888',
+    fontSize: 13,
+  },
+  signUpTextSmall: {
     fontSize: 12,
-    textAlign: 'center',
+  },
+  signUpTextTablet: {
+    fontSize: 16,
+  },
+  signUpLink: {
+    color: '#2563eb',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 2,
+  },
+  signUpLinkSmall: {
+    fontSize: 12,
+  },
+  signUpLinkTablet: {
+    fontSize: 16,
+  },
+  forgotPasswordLink: {
+    color: '#2563eb',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
+  forgotPasswordLinkSmall: {
+    fontSize: 12,
+  },
+  forgotPasswordLinkTablet: {
+    fontSize: 16,
   },
 });
 

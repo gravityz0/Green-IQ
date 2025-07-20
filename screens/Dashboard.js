@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,25 +13,27 @@ import {
   TextInput,
   Dimensions,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { UserContext } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LineChart, PieChart } from 'react-native-chart-kit';
+import { useWindowDimensions } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Enhanced mock data with more comprehensive statistics
 const mockStats = {
-  collectionPointsCount: 24,
-  itemsRecycled: 45872,
-  activeUsers: 1247,
-  monthlyGrowth: 12.5,
-  co2Saved: 238.5, // tons
-  pointsDistributed: 892340,
+  collectionPointsCount: 0,
+  itemsRecycled: 0,
+  activeUsers: 0,
+  monthlyGrowth: 0,
+  co2Saved: 0, 
+  pointsDistributed: 0,
   topRecyclers: [
-    { id: 1, name: 'EcoWarrior John', points: 15430, items: 245 },
-    { id: 2, name: 'Green Sarah', points: 12890, items: 198 },
-    { id: 3, name: 'RecyclePro Mike', points: 11250, items: 167 },
+    { id: 1, name: 'EcoWarrior John', points: 0, items: 0 },
+    { id: 2, name: 'Green Sarah', points: 0, items: 0 },
+    { id: 3, name: 'RecyclePro Mike', points: 0, items: 0 },
   ],
   recentActivities: [
     { id: 1, action: 'New collection point added', location: 'Gasabo District', time: '2 hours ago', type: 'success' },
@@ -64,6 +66,14 @@ const mockStats = {
   ],
 };
 
+const ecoTips = [
+  'Rinse containers before recycling to avoid contamination.',
+  'Bring your own bag to reduce plastic waste.',
+  'Flatten cardboard boxes to save space in recycling bins.',
+  'Electronics should be recycled at special drop-off points.',
+  'Compost food scraps to reduce landfill waste.'
+];
+
 const Dashboard = () => {
   const { user } = useContext(UserContext);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,6 +88,10 @@ const Dashboard = () => {
     );
   }, [searchQuery]);
 
+  const window = useWindowDimensions();
+  const isTablet = window.width >= 900;
+  const isLandscape = window.width > window.height;
+
   const email = user?.email || '';
 
   const onRefresh = React.useCallback(() => {
@@ -86,6 +100,24 @@ const Dashboard = () => {
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
+  }, []);
+
+  // Animation for main dashboard card
+  const mainAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(mainAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const [ecoTipIndex, setEcoTipIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEcoTipIndex((prev) => (prev + 1) % ecoTips.length);
+    }, 6000);
+    return () => clearInterval(interval);
   }, []);
 
   if (!email.endsWith('@rca.com')) {
@@ -126,64 +158,169 @@ const Dashboard = () => {
     return '#27ae60';
   };
 
+  // Responsive grid for metrics
+  const renderMetricsGrid = () => {
+    const metrics = [
+      {
+        icon: 'location',
+        value: mockStats.collectionPointsCount,
+        label: 'Collection Points',
+        cardStyle: styles.primaryCard,
+      },
+      {
+        icon: 'leaf',
+        value: mockStats.itemsRecycled.toLocaleString(),
+        label: 'Items Recycled',
+        cardStyle: styles.successCard,
+      },
+      {
+        icon: 'people',
+        value: mockStats.activeUsers.toLocaleString(),
+        label: 'Active Users',
+        cardStyle: styles.infoCard,
+      },
+      {
+        icon: 'trending-up',
+        value: `+${mockStats.monthlyGrowth}%`,
+        label: 'Monthly Growth',
+        cardStyle: styles.warningCard,
+      },
+    ];
+    const columns = isTablet ? 4 : 2;
+    const rows = [];
+    for (let i = 0; i < metrics.length; i += columns) {
+      rows.push(metrics.slice(i, i + columns));
+    }
+    return rows.map((row, rowIndex) => (
+      <View key={rowIndex} style={[styles.metricsRow, isTablet && styles.metricsRowTablet]}>
+        {row.map((metric, idx) => (
+          <View key={metric.label} style={[styles.metricCard, metric.cardStyle, isTablet && styles.metricCardTablet]}>
+            <Ionicons name={metric.icon} size={isTablet ? 38 : 28} color="#fff" style={{ marginBottom: 6 }} />
+            <Text style={[styles.metricValue, isTablet && styles.metricValueTablet]}>{metric.value}</Text>
+            <Text style={[styles.metricLabel, isTablet && styles.metricLabelTablet]}>{metric.label}</Text>
+          </View>
+        ))}
+      </View>
+    ));
+  };
+
   const renderTabContent = () => {
     switch (selectedTab) {
       case 'overview':
         return (
-          <View>
-            {/* Key Metrics */}
-            <View style={styles.metricsContainer}>
-              <View style={styles.metricsRow}>
-                <View style={[styles.metricCard, styles.primaryCard]}>
-                  <Ionicons name="location" size={28} color="#fff" />
-                  <Text style={styles.metricValue}>{mockStats.collectionPointsCount}</Text>
-                  <Text style={styles.metricLabel}>Collection Points</Text>
-                </View>
-                <View style={[styles.metricCard, styles.successCard]}>
-                  <Ionicons name="leaf" size={28} color="#fff" />
-                  <Text style={styles.metricValue}>{mockStats.itemsRecycled.toLocaleString()}</Text>
-                  <Text style={styles.metricLabel}>Items Recycled</Text>
-                </View>
-              </View>
-              <View style={styles.metricsRow}>
-                <View style={[styles.metricCard, styles.infoCard]}>
-                  <Ionicons name="people" size={28} color="#fff" />
-                  <Text style={styles.metricValue}>{mockStats.activeUsers.toLocaleString()}</Text>
-                  <Text style={styles.metricLabel}>Active Users</Text>
-                </View>
-                <View style={[styles.metricCard, styles.warningCard]}>
-                  <Ionicons name="trending-up" size={28} color="#fff" />
-                  <Text style={styles.metricValue}>+{mockStats.monthlyGrowth}%</Text>
-                  <Text style={styles.metricLabel}>Monthly Growth</Text>
-                </View>
-              </View>
+          <Animated.View style={{
+            opacity: mainAnim,
+            transform: [{ translateY: mainAnim.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
+          }}>
+            {/* Welcoming Header */}
+            <View style={styles.dashboardHeader}>
+              <Text style={styles.dashboardTitle}>Welcome to Your Dashboard!</Text>
+              <Text style={styles.dashboardSubtitle}>Track your impact, manage collection points, and see your community grow.</Text>
             </View>
-
+            {/* Quick Actions */}
+            <View style={styles.quickActionsRow}>
+              <TouchableOpacity style={styles.quickActionButton} onPress={() => Alert.alert('Scan Item', 'Go to Scan screen!')}>
+                <Ionicons name="scan" size={28} color="#fff" />
+                <Text style={styles.quickActionText}>Scan Item</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.quickActionButton} onPress={() => Alert.alert('Find Drop-off', 'Go to Map!')}>
+                <Ionicons name="map" size={28} color="#fff" />
+                <Text style={styles.quickActionText}>Find Drop-off</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.quickActionButton} onPress={() => Alert.alert('Invite Friends', 'Share the app!')}>
+                <Ionicons name="person-add" size={28} color="#fff" />
+                <Text style={styles.quickActionText}>Invite Friends</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Eco Tip */}
+            <View style={styles.ecoTipCard}>
+              <Ionicons name="leaf" size={22} color="#43e97b" style={{ marginRight: 8 }} />
+              <Text style={styles.ecoTipText}>{ecoTips[ecoTipIndex]}</Text>
+            </View>
+            {/* Safe Zones Map Preview */}
+            <View style={[styles.sectionCard, isTablet && styles.sectionCardTablet, { padding: 0, overflow: 'hidden', marginBottom: 28 }]}> 
+              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet, { padding: 16 }]}>Safe Zones Map</Text>
+              <MapView
+                style={styles.mapPreview}
+                initialRegion={{
+                  latitude: -1.9403,
+                  longitude: 30.0739,
+                  latitudeDelta: 0.12,
+                  longitudeDelta: 0.12,
+                }}
+                pointerEvents="none"
+              >
+                {mockStats.collectionPointsList.map(point => (
+                  <Marker
+                    key={point.id}
+                    coordinate={{ latitude: point.coordinates.lat, longitude: point.coordinates.lng }}
+                    title={point.name}
+                    description={point.location}
+                  />
+                ))}
+              </MapView>
+              <TouchableOpacity style={styles.mapButton} onPress={() => Alert.alert('Open Map', 'Go to full map!')}>
+                <Text style={styles.mapButtonText}>Open Full Map</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Material Breakdown Pie Chart */}
+            <View style={[styles.sectionCard, isTablet && styles.sectionCardTablet]}> 
+              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Material Breakdown</Text>
+              <PieChart
+                data={mockStats.materialTypes}
+                width={isTablet ? 400 : screenWidth - 60}
+                height={isTablet ? 220 : 160}
+                chartConfig={{
+                  color: (opacity = 1) => `rgba(45, 106, 79, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                }}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft={isTablet ? '20' : '10'}
+                absolute
+                style={{ alignSelf: 'center' }}
+              />
+            </View>
+            {/* Leaderboard */}
+            <View style={[styles.sectionCard, isTablet && styles.sectionCardTablet]}> 
+              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Top Recyclers</Text>
+              {mockStats.topRecyclers.map((user, idx) => (
+                <View key={user.id} style={styles.leaderboardRow}>
+                  <Ionicons name="trophy" size={22} color={idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : '#cd7f32'} style={{ marginRight: 8 }} />
+                  <Text style={styles.leaderboardName}>{user.name}</Text>
+                  <Text style={styles.leaderboardPoints}>{user.points} pts</Text>
+                  <Text style={styles.leaderboardItems}>{user.items} items</Text>
+                </View>
+              ))}
+            </View>
+            {/* Key Metrics (Responsive Grid) */}
+            <View style={[styles.metricsContainer, isTablet && styles.metricsContainerTablet]}>
+              {renderMetricsGrid()}
+            </View>
             {/* Environmental Impact */}
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Environmental Impact</Text>
+            <View style={[styles.sectionCard, isTablet && styles.sectionCardTablet]}>
+              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Environmental Impact</Text>
               <View style={styles.impactRow}>
                 <View style={styles.impactItem}>
-                  <Ionicons name="cloud" size={24} color="#27ae60" />
-                  <Text style={styles.impactValue}>{mockStats.co2Saved} tons</Text>
-                  <Text style={styles.impactLabel}>CO₂ Saved</Text>
+                  <Ionicons name="cloud" size={isTablet ? 32 : 24} color="#27ae60" />
+                  <Text style={[styles.impactValue, isTablet && styles.impactValueTablet]}>{mockStats.co2Saved} tons</Text>
+                  <Text style={[styles.impactLabel, isTablet && styles.impactLabelTablet]}>CO₂ Saved</Text>
                 </View>
                 <View style={styles.impactItem}>
-                  <Ionicons name="star" size={24} color="#f39c12" />
-                  <Text style={styles.impactValue}>{mockStats.pointsDistributed.toLocaleString()}</Text>
-                  <Text style={styles.impactLabel}>Points Distributed</Text>
+                  <Ionicons name="star" size={isTablet ? 32 : 24} color="#f39c12" />
+                  <Text style={[styles.impactValue, isTablet && styles.impactValueTablet]}>{mockStats.pointsDistributed.toLocaleString()}</Text>
+                  <Text style={[styles.impactLabel, isTablet && styles.impactLabelTablet]}>Points Distributed</Text>
                 </View>
               </View>
             </View>
-
             {/* Weekly Collection Chart */}
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Weekly Collection Trends</Text>
+            <View style={[styles.sectionCard, isTablet && styles.sectionCardTablet]}>
+              <Text style={[styles.sectionTitle, isTablet && styles.sectionTitleTablet]}>Weekly Collection Trends</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <LineChart
                   data={mockStats.weeklyData}
-                  width={screenWidth - 60}
-                  height={200}
+                  width={(isTablet ? 700 : screenWidth - 60)}
+                  height={isTablet ? 280 : 200}
                   chartConfig={{
                     backgroundColor: '#fff',
                     backgroundGradientFrom: '#fff',
@@ -193,8 +330,8 @@ const Dashboard = () => {
                     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                     style: { borderRadius: 16 },
                     propsForDots: {
-                      r: '4',
-                      strokeWidth: '2',
+                      r: isTablet ? '6' : '4',
+                      strokeWidth: isTablet ? '3' : '2',
                       stroke: '#2d6a4f',
                     },
                   }}
@@ -203,7 +340,7 @@ const Dashboard = () => {
                 />
               </ScrollView>
             </View>
-          </View>
+          </Animated.View>
         );
 
       case 'points':
@@ -521,48 +658,58 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   metricsContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 900,
+  },
+  metricsContainerTablet: {
+    marginBottom: 36,
+    maxWidth: 900,
   },
   metricsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 18,
+  },
+  metricsRowTablet: {
+    marginBottom: 28,
   },
   metricCard: {
     flex: 1,
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 20,
-    marginHorizontal: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  primaryCard: {
     backgroundColor: '#2d6a4f',
+    borderRadius: 18,
+    marginHorizontal: 6,
+    paddingVertical: 18,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  successCard: {
-    backgroundColor: '#27ae60',
-  },
-  infoCard: {
-    backgroundColor: '#3498db',
-  },
-  warningCard: {
-    backgroundColor: '#f39c12',
+  metricCardTablet: {
+    borderRadius: 28,
+    paddingVertical: 32,
+    marginHorizontal: 14,
   },
   metricValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
     color: '#fff',
-    marginTop: 10,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 2,
+  },
+  metricValueTablet: {
+    fontSize: 32,
   },
   metricLabel: {
-    fontSize: 12,
-    color: '#fff',
-    marginTop: 5,
-    textAlign: 'center',
+    color: '#e0e0e0',
+    fontSize: 14,
+    marginTop: 2,
+  },
+  metricLabelTablet: {
+    fontSize: 18,
   },
   sectionCard: {
     backgroundColor: '#fff',
@@ -575,11 +722,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  sectionCardTablet: {
+    borderRadius: 24,
+    padding: 30,
+    marginBottom: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1b4332',
     marginBottom: 15,
+  },
+  sectionTitleTablet: {
+    fontSize: 24,
+    marginBottom: 20,
   },
   impactRow: {
     flexDirection: 'row',
@@ -594,10 +755,16 @@ const styles = StyleSheet.create({
     color: '#1b4332',
     marginTop: 8,
   },
+  impactValueTablet: {
+    fontSize: 28,
+  },
   impactLabel: {
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  impactLabelTablet: {
+    fontSize: 16,
   },
   chart: {
     marginVertical: 8,
@@ -807,6 +974,157 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: '600',
+  },
+  dashboardHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  dashboardTitle: {
+    color: '#222',
+    fontSize: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 6,
+    letterSpacing: 1.2,
+  },
+  dashboardSubtitle: {
+    color: '#11998e',
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 2,
+    fontWeight: '500',
+    lineHeight: 24,
+  },
+  deniedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  deniedText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#d9534f',
+    marginTop: 10,
+  },
+  deniedSub: {
+    fontSize: 16,
+    color: '#777',
+    textAlign: 'center',
+    marginTop: 5,
+    marginBottom: 20,
+  },
+  contactButton: {
+    backgroundColor: '#2d6a4f',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2d6a4f',
+  },
+  contactButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+    marginTop: 8,
+    gap: 10,
+  },
+  quickActionButton: {
+    flex: 1,
+    backgroundColor: '#11998e',
+    borderRadius: 16,
+    alignItems: 'center',
+    paddingVertical: 14,
+    marginHorizontal: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quickActionText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  ecoTipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 18,
+    marginHorizontal: 2,
+    shadowColor: '#43e97b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  ecoTipText: {
+    color: '#11998e',
+    fontSize: 15,
+    fontWeight: '500',
+    flex: 1,
+  },
+  mapPreview: {
+    width: '100%',
+    height: 180,
+    minHeight: 120,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  mapButton: {
+    backgroundColor: '#43e97b',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  mapButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 1,
+  },
+  leaderboardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  leaderboardName: {
+    flex: 1,
+    fontWeight: 'bold',
+    color: '#222',
+    fontSize: 15,
+  },
+  leaderboardPoints: {
+    color: '#11998e',
+    fontWeight: 'bold',
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  leaderboardItems: {
+    color: '#888',
+    marginLeft: 8,
+    fontSize: 13,
   },
 });
 

@@ -43,25 +43,25 @@ const HomeScreen = ({ navigation }) => {
   const stats = [
     {
       icon: "leaf-outline",
-      value: "1,204",
+      value: "0",
       label: "Items Recycled",
       color: "#2d6a4f",
     },
     {
       icon: "trophy-outline",
-      value: "8,500",
+      value: "0",
       label: "Eco Points",
       color: "#e67e22",
     },
     {
       icon: "people-outline",
-      value: "#34",
+      value: "#238",
       label: "Community Rank",
       color: "#2980b9",
     },
     {
       icon: "flame-outline",
-      value: "72",
+      value: "0",
       label: "Streak Days",
       color: "#e74c3c",
     },
