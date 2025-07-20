@@ -23,6 +23,7 @@ import Achievements from './screens/Achievements';
 import EcoPointsDetails from './screens/EcoPointsDetails';
 import Leaderboard from './screens/Leaderboard';
 import Community from './screens/Community';
+import Rewards from './screens/Rewards';
 
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -154,12 +155,13 @@ function AppTabs() {
           } else if (route.name === 'Map') {
             iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'Scan') {
-            // Special styling for the scan button
             return (
               <View style={styles.scanButtonContainer}>
                 <Ionicons name="scan" size={30} color="#fff" />
               </View>
             );
+          } else if (route.name === 'RewardsTab') {
+            iconName = focused ? 'gift' : 'gift-outline';
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Profile') {
@@ -169,7 +171,8 @@ function AppTabs() {
         },
         tabBarActiveTintColor: '#2d6a4f',
         tabBarInactiveTintColor: 'gray',
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
         tabBarStyle: route.name === 'Chat'
           ? { display: 'none' }
           : {
@@ -180,11 +183,12 @@ function AppTabs() {
             },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeScreen} />
-      <Tab.Screen name="Map" component={CollectionPoints} />
-      <Tab.Screen name="Scan" component={ScanScreen} />
-      <Tab.Screen name="Chat" component={Chat} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
+      <Tab.Screen name="Map" component={CollectionPoints} options={{ tabBarLabel: 'Map' }} />
+      <Tab.Screen name="Scan" component={ScanScreen} options={{ tabBarLabel: 'Scan' }} />
+      <Tab.Screen name="RewardsTab" component={Rewards} options={{ tabBarLabel: 'Rewards' }} />
+      <Tab.Screen name="Chat" component={Chat} options={{ tabBarLabel: 'Community' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 }
@@ -217,6 +221,7 @@ function App() {
           <Stack.Screen name="EcoPointsDetails" component={EcoPointsDetails} />
           <Stack.Screen name="Leaderboard" component={Leaderboard} />
           <Stack.Screen name="Community" component={Community} />
+          <Stack.Screen name="Rewards" component={Rewards} />
 
         </Stack.Navigator>
       </NavigationContainer>

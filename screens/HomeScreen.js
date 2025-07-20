@@ -309,6 +309,28 @@ const HomeScreen = ({ navigation }) => {
   const compactDailyChallengeTitle = [styles.dailyChallengeTitle, { fontSize: 14 }];
   const compactDailyChallengeText = [styles.dailyChallengeText, { fontSize: 11 }];
 
+  // Featured rewards for HomeScreen
+  const featuredRewards = [
+    {
+      id: 1,
+      name: 'Eco Certificate',
+      cost: 500,
+      image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+    },
+    {
+      id: 2,
+      name: 'Reusable Water Bottle',
+      cost: 800,
+      image: 'https://cdn-icons-png.flaticon.com/512/1046/1046857.png',
+    },
+    {
+      id: 3,
+      name: 'Discount Coupon',
+      cost: 300,
+      image: 'https://cdn-icons-png.flaticon.com/512/3523/3523887.png',
+    },
+  ];
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
@@ -491,6 +513,27 @@ const HomeScreen = ({ navigation }) => {
               ))}
             </LinearGradient>
           </TouchableOpacity>
+        </View>
+        {/* EcoPoints Rewards & Marketplace */}
+        <View style={compactSectionSpacing}>
+          <View style={compactSectionHeader}>
+            <Text style={compactSectionTitle}>🎁 EcoPoints Rewards & Marketplace</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Rewards')}>
+              <Text style={compactSeeAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 6 }}>
+            {featuredRewards.map((reward) => (
+              <View key={reward.id} style={{ backgroundColor: '#e0f7fa', borderRadius: 16, padding: 14, marginRight: 16, alignItems: 'center', width: 140, elevation: 2 }}>
+                <Image source={{ uri: reward.image }} style={{ width: 48, height: 48, borderRadius: 10, marginBottom: 8, backgroundColor: '#fff' }} />
+                <Text style={{ fontWeight: 'bold', color: '#1B5E20', fontSize: 15, marginBottom: 2, textAlign: 'center' }}>{reward.name}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                  <Ionicons name="leaf" size={16} color="#00C896" />
+                  <Text style={{ color: '#00C896', fontWeight: 'bold', fontSize: 13, marginLeft: 4 }}>{reward.cost}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
         </View>
         {/* Discover Section (optional, move to bottom) */}
         <View style={compactSectionSpacing}>
