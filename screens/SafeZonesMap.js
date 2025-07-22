@@ -49,14 +49,16 @@ export default function SafeZonesMap({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Top bar with notification bell */}
+      {/* Navigation Controls */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 44, paddingBottom: 10, backgroundColor: '#1B5E20', paddingHorizontal: 10 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{ padding: 6, flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 6 }}>Home</Text>
+        </TouchableOpacity>
         <Text style={{ color: '#fff', fontSize: 22, fontWeight: 'bold', letterSpacing: 1 }}>Safe Zones</Text>
-        <TouchableOpacity onPress={() => setNotifVisible(true)} style={{ padding: 6 }}>
-          <Ionicons name="notifications-outline" size={26} color="#fff" />
-          <View style={{ position: 'absolute', top: 2, right: 2, backgroundColor: '#FF5722', borderRadius: 8, width: 16, height: 16, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{alerts.length}</Text>
-          </View>
+        <TouchableOpacity onPress={() => navigation.navigate('Map')} style={{ padding: 6, flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="map-outline" size={22} color="#00C896" />
+          <Text style={{ color: '#00C896', fontSize: 15, fontWeight: 'bold', marginLeft: 4 }}>Collection Points</Text>
         </TouchableOpacity>
       </View>
       {/* Search input below top bar */}

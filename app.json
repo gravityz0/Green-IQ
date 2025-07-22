@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "GreenIQ",
+    "jsEngine":"jsc",
     "slug": "GreenIQ",
     "version": "1.0.0",
     "orientation": "portrait",

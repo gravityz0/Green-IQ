@@ -364,7 +364,7 @@ const HomeScreen = ({ navigation }) => {
                 style={styles.simpleTopNavAvatar}
               />
             ) : (
-              <Ionicons name="person" size={28} color="#fff" style={{ backgroundColor: '#bbb', borderRadius: 16, padding: 8 }} />
+              <Ionicons name="person" size={28} color="#FF3D57" style={{ backgroundColor: '#bbb', borderRadius: 16, padding: 8 }} />
             )}
           </View>
         </TouchableOpacity>
@@ -399,7 +399,7 @@ const HomeScreen = ({ navigation }) => {
           {[{ icon: 'scan-outline', label: 'Scan', nav: 'ScanChoice' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
             <TouchableOpacity key={item.label} style={styles.quickLinkButton} onPress={() => navigation.navigate(item.nav)} activeOpacity={0.85}>
               <View style={compactQuickLinkIconWrap}>
-                <Ionicons name={item.icon} size={isTablet ? 20 : 16} color="#1B5E20" />
+                <Ionicons name={item.icon} size={isTablet ? 20 : 16} color="#FF3D57" />
               </View>
               <Text style={compactQuickLinkLabel}>{item.label}</Text>
             </TouchableOpacity>
@@ -461,7 +461,7 @@ const HomeScreen = ({ navigation }) => {
             {badges.map((badge, index) => (
               <TouchableOpacity key={badge.id} onPress={() => navigation.navigate('Achievements')} activeOpacity={0.8}>
                 <RNAnimated.View style={compactBadgeCircle(badge)}>
-                  <Ionicons name={badge.icon} size={48} color={badge.earned ? badge.color : '#bbb'} style={{ marginBottom: 8 }} />
+                  <Ionicons name={badge.icon} size={48} color={badge.earned ? (badge.color === '#00C896' ? '#FF6B35' : badge.color) : '#bbb'} style={{ marginBottom: 8 }} />
                   <Text style={compactBadgeLabel}>{badge.name}</Text>
                 </RNAnimated.View>
               </TouchableOpacity>
@@ -480,7 +480,7 @@ const HomeScreen = ({ navigation }) => {
             {activityPreview.map((item, index) => (
               <TouchableOpacity key={item.id} onPress={() => navigation.navigate('Activity')} activeOpacity={0.8}>
                 <RNAnimated.View style={[styles.activityRow, { opacity: fadeAnim, transform: [{ translateX: slideAnim.interpolate({ inputRange: [0, 50], outputRange: [0, index * 10 + 20] }) }] }]}>
-                  <View style={[styles.activityIconContainer, { backgroundColor: item.color + '20' }]}><Ionicons name={item.icon} size={isTablet ? 14 : 10} color={item.color} /></View>
+                  <View style={[styles.activityIconContainer, { backgroundColor: item.color + '20' }]}><Ionicons name={item.icon} size={isTablet ? 14 : 10} color="#FF6B35" /></View>
                   <Text style={[styles.activityText, { fontSize: 11 }]}>{item.text}</Text>
                   <Text style={[styles.activityTime, { fontSize: 9 }]}>{item.time}</Text>
                 </RNAnimated.View>
@@ -500,7 +500,7 @@ const HomeScreen = ({ navigation }) => {
                 <TouchableOpacity key={user.id} onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.8}>
                   <View style={[styles.leaderboardRow, { paddingVertical: 6, paddingHorizontal: 8 }] }>
                     <View style={styles.leaderboardPosition}>
-                      <Ionicons name="trophy" size={isTablet ? 14 : 10} color={idx === 0 ? '#ffd700' : idx === 1 ? '#c0c0c0' : '#cd7f32'} />
+                      <Ionicons name="trophy" size={isTablet ? 14 : 10} color={idx === 0 ? '#FFD700' : idx === 1 ? '#FF3D57' : '#FF6B35'} />
                       <Text style={[styles.leaderboardRank, { fontSize: 10 } ]}>#{idx + 1}</Text>
                     </View>
                     <Text style={[styles.leaderboardName, { fontSize: 11 }]} numberOfLines={1}>{user.name}</Text>
@@ -528,7 +528,7 @@ const HomeScreen = ({ navigation }) => {
                 <Image source={{ uri: reward.image }} style={{ width: 48, height: 48, borderRadius: 10, marginBottom: 8, backgroundColor: '#fff' }} />
                 <Text style={{ fontWeight: 'bold', color: '#1B5E20', fontSize: 15, marginBottom: 2, textAlign: 'center' }}>{reward.name}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                  <Ionicons name="leaf" size={16} color="#00C896" />
+                  <Ionicons name="leaf" size={16} color="#FF3D57" />
                   <Text style={{ color: '#00C896', fontWeight: 'bold', fontSize: 13, marginLeft: 4 }}>{reward.cost}</Text>
                 </View>
               </View>
@@ -542,7 +542,13 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.sectionTitleUnderline} />
           </View>
           <View style={[styles.discoverGrid, isTablet ? { gap: 14 } : { gap: 8 }] }>
-            {[{ icon: "map-outline", text: "Find Drop-off", gradient: ["#4ECDC4", "#44A08D"], onPress: () => navigation.navigate("Map") }, { icon: "newspaper-outline", text: "Recycling Tips", gradient: ["#FF6B35", "#F7931E"], onPress: () => navigation.navigate("Tips") }, { icon: "medal-outline", text: "Achievements", gradient: ["#9C27B0", "#673AB7"], onPress: () => navigation.navigate("Achievements") }, { icon: "chatbubbles-outline", text: "Community", gradient: ["#FF5722", "#FF8A65"], onPress: () => navigation.navigate("Community") }].map((item, index) => (
+            {[
+              { icon: "map-outline", text: "Find Drop-off", gradient: ["#4ECDC4", "#44A08D"], onPress: () => navigation.navigate("Map") },
+              { icon: "shield-outline", text: "Safe Zones", gradient: ["#FF3D57", "#FFD700"], onPress: () => navigation.navigate("SafeZonesMap") },
+              { icon: "newspaper-outline", text: "Recycling Tips", gradient: ["#FF6B35", "#F7931E"], onPress: () => navigation.navigate("Tips") },
+              { icon: "medal-outline", text: "Achievements", gradient: ["#9C27B0", "#673AB7"], onPress: () => navigation.navigate("Achievements") },
+              { icon: "chatbubbles-outline", text: "Community", gradient: ["#FF5722", "#FF8A65"], onPress: () => navigation.navigate("Community") }
+            ].map((item, index) => (
               <TouchableOpacity key={index} style={[styles.discoverCard, isTablet ? { width: '22%' } : { width: '47%' }]} onPress={item.onPress} activeOpacity={0.9} accessibilityLabel={item.text}>
                 <LinearGradient colors={["#fff", "#fafafa"]} style={styles.discoverCardGradient}>
                   <LinearGradient colors={item.gradient} style={styles.discoverIconContainer}>
@@ -599,7 +605,7 @@ const HomeScreen = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.quickActionIcon}>
-                  <Ionicons name={action.icon} size={24} color="#fff" />
+                  <Ionicons name={action.icon} size={24} color="#FF3D57" />
                 </View>
                 <Text style={styles.quickActionLabel}>{action.label}</Text>
               </TouchableOpacity>
@@ -618,7 +624,7 @@ const HomeScreen = ({ navigation }) => {
         <Ionicons 
           name={quickActionsVisible ? "close" : "menu"} 
           size={28} 
-          color="#fff" 
+          color="#FF3D57" 
         />
       </TouchableOpacity>
     </SafeAreaView>

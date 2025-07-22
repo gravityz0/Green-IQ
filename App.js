@@ -27,6 +27,8 @@ import Rewards from './screens/Rewards';
 import ReferralScreen from './screens/ReferralScreen';
 import SafeZoneAlerts from './screens/SafeZoneAlerts';
 import SafeZonesMap from './screens/SafeZonesMap';
+import ScanChoiceScreen from './screens/ScanChoiceScreen';
+import ProductScanScreen from './screens/ProductScanScreen';
 
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -191,7 +193,18 @@ function AppTabs() {
       <Tab.Screen name="Map" component={SafeZonesMap} options={{ tabBarLabel: 'Safe Zones', tabBarIcon: ({ color, size, focused }) => (
         <Ionicons name={focused ? 'shield' : 'shield-outline'} size={size} color={color} />
       ) }} />
-      <Tab.Screen name="Scan" component={ScanScreen} options={{ tabBarLabel: 'Scan' }} />
+      <Tab.Screen
+        name="Scan"
+        component={ScanScreen} // This component is a placeholder; the press action is overridden.
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default action and navigate to the choice screen
+            e.preventDefault();
+            navigation.navigate('ScanChoice');
+          },
+        })}
+        options={{ tabBarLabel: 'Scan' }}
+      />
       <Tab.Screen name="RewardsTab" component={Rewards} options={{ tabBarLabel: 'Rewards' }} />
       <Tab.Screen name="Chat" component={CollectionPoints} options={{ tabBarLabel: 'Community' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
@@ -231,6 +244,9 @@ function App() {
           <Stack.Screen name="Referral" component={ReferralScreen} />
           <Stack.Screen name="SafeZoneAlerts" component={SafeZoneAlerts} />
           <Stack.Screen name="SafeZonesMap" component={SafeZonesMap} />
+          <Stack.Screen name="ScanChoice" component={ScanChoiceScreen} />
+          <Stack.Screen name="Scan" component={ScanScreen} />
+          <Stack.Screen name="ProductScan" component={ProductScanScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

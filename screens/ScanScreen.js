@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import WasteClassificationModal from '../components/WasteClassificationModal';
 
 const ScanScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
@@ -11,6 +13,8 @@ const ScanScreen = () => {
   const [confirmed, setConfirmed] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [classificationResults, setClassificationResults] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -46,17 +50,54 @@ const ScanScreen = () => {
   const handleUpload = async () => {
     setUploading(true);
     setUploadProgress(0);
-    // Simulate upload for each photo
-    for (let i = 0; i < photos.length; i++) {
-      // Simulate network delay
-      await new Promise(res => setTimeout(res, 800));
-      setUploadProgress(i + 1);
+    try {
+      const formData = new FormData();
+      photos.forEach((photo, idx) => {
+        formData.append('images', {
+          uri: photo.uri,
+          name: `photo_${idx}.jpg`,
+          type: 'image/jpeg',
+        });
+      });
+      const response = await axios.post('http://localhost:5000/classify', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total) {
+            setUploadProgress(Math.round((progressEvent.loaded / progressEvent.total) * photos.length));
+          }
+        },
+      });
+      setUploading(false);
+      if (response.data && response.data.results) {
+        // Attach image uri to each result for modal display
+        const results = response.data.results.map((result, idx) => ({
+          ...result,
+          image: photos[idx]?.uri || null,
+        }));
+        setClassificationResults(results);
+        setShowModal(true);
+      } else {
+        Alert.alert('Error', 'No results returned from server.');
+      }
+    } catch (error) {
+      setUploading(false);
+      Alert.alert('Upload Error', error?.response?.data?.message || error.message || 'Failed to classify images.');
     }
-    setUploading(false);
-    Alert.alert('Upload Complete', `Uploaded ${photos.length} photo(s) successfully!`);
-    // Optionally, clear photos and reset state
+  };
+
+  const handleModalConfirm = () => {
+    setShowModal(false);
     setPhotos([]);
     setConfirmed(false);
+    setClassificationResults([]);
+    // Optionally, show a success message or update points
+    Alert.alert('EcoPoints Earned!', 'You have earned EcoPoints for classifying your waste!');
+  };
+  const handleModalClose = () => {
+    setShowModal(false);
+    // Optionally, keep photos for retry or reset as above
   };
 
   return (
@@ -116,6 +157,13 @@ const ScanScreen = () => {
           )}
         </View>
       )}
+      {/* Waste Classification Modal */}
+      <WasteClassificationModal
+        visible={showModal}
+        results={classificationResults}
+        onConfirm={handleModalConfirm}
+        onClose={handleModalClose}
+      />
     </View>
   );
 };
