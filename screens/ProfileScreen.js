@@ -61,7 +61,7 @@ const ProfileScreen = ({ navigation }) => {
             <Ionicons name="leaf" size={28} color="#00C896" style={{ marginRight: 10 }} />
             <View>
               <Text style={{ color: '#00C896', fontWeight: 'bold', fontSize: 18 }}>Eco Points</Text>
-              <Text style={{ color: '#1B5E20', fontWeight: 'bold', fontSize: 28 }}>{user ? user.ecoPoints || 1000 : '...'}</Text>
+              <Text style={{ color: '#1B5E20', fontWeight: 'bold', fontSize: 28 }}>{user ? user.points : 'Loading...'}</Text>
             </View>
           </View>
           {/* Progress bar to next badge */}
