@@ -1,100 +1,118 @@
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  Alert,
-  ActivityIndicator,
+  TextInput,
+  Button,
   StyleSheet,
-  Pressable,
-} from "react-native";
-import React, { useState, useEffect } from "react";
-import { Camera, CameraView } from "expo-camera";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons";
+  Image,
+  ScrollView,
+} from 'react-native';
 
-const ProductScanScreen = () => {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [loading, isLoading] = useState(false);
+export default function BarcodeScanner() {
+  const [barcode, setBarcode] = useState('');
   const [product, setProduct] = useState(null);
-  const [scanned, setScanner] = useState(false);
-  const [showCamera, setShowCamera] = useState(true);
-  const [cameraClicked, setCameraClicked] = useState(false);
-  useEffect(() => {
-    if (cameraClicked) {
-      const getCameraPermission = async () => {
-        const { status } = await Camera.requestCameraPermissionsAsync();
-        setHasPermission(status === "granted");
-      };
-      getCameraPermission();
-    }
-  }, [cameraClicked]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleBarcodeScanned = async ({ type, data }) => {
-    setScanner(true);
-    isLoading(true);
-    setShowCamera(false);
+  const fetchProduct = async () => {
+    setLoading(true);
+    setError('');
+    setProduct(null);
     try {
       const response = await fetch(
-        `https://world.openfoodfacts.org/api/v0/product/${data}.json`
+        `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`
       );
       const json = await response.json();
-      Alert.alert("Scanned");
-      setProduct(json.product);
-    } catch (error) {
-      Alert.alert("Error occured when fetching");
+
+      if (json.status === 1) {
+        setProduct(json.product);
+      } else {
+        setError('Product not found.');
+      }
+    } catch (err) {
+      setError('Failed to fetch product.');
+    } finally {
+      setLoading(false);
     }
-    isLoading(false);
   };
 
-  if (hasPermission == null) {
-    return <Text>Requesting camera permission</Text>;
-  }
-  if (hasPermission == false) {
-    return <Text>No camera permission</Text>;
-  }
-  return (
-    <SafeAreaProvider>
-      <SafeAreaView
-        style={{ flex: 1 }}
-        edges={["top", "bottom", "left", "right"]}
-      >
-        {showCamera && (
-          <CameraView
-            onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-            style={StyleSheet.absoluteFillObject}
-          />
-        )}
-        {loading && <ActivityIndicator size="large" />}
-        {product && (
-          <View style={styles.productInfo}>
-            <Text>Name: {product.categories_tags}</Text>
-            <Text>Name: {product.brands}</Text>
-            <Text>Name: {product.product_name}</Text>
-            <Text>Brand: {product.ingredients_tags}</Text>
-          </View>
-        )}
+  const reset = () => {
+    setBarcode('');
+    setProduct(null);
+    setError('');
+  };
 
-        {!cameraClicked && (
-          <Pressable style={styles.cameraHolder} onPress={()=>{setCameraClicked(true)}}>
-            <FontAwesome name="camera" size={30} style={{ color: "white" }} />
-            <Text style={{ color: "white", marginTop: 2 }}>Scan a product</Text>
-          </Pressable>
-        )}
-      </SafeAreaView>
-    </SafeAreaProvider>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {!product ? (
+        <>
+          <Text style={styles.label}>Enter Barcode:</Text>
+          <TextInput
+            value={barcode}
+            onChangeText={setBarcode}
+            placeholder="e.g. 1234567890123"
+            style={styles.input}
+            keyboardType="numeric"
+          />
+          <Button title={loading ? 'Searching...' : 'Search'} onPress={fetchProduct} disabled={loading || !barcode} />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </>
+      ) : (
+        <>
+          <Text style={styles.title}>Product Details</Text>
+          {product.image_url && (
+            <Image source={{ uri: product.image_url }} style={styles.image} />
+          )}
+          <Text>Product Name: {product.product_name}</Text>
+          <Text>Brand: {product.brands}</Text>
+          <Text>Categories: {product.categories_tags?.join(', ')}</Text>
+          <Text>Ingredients: {product.ingredients_text || 'N/A'}</Text>
+          <Text>Nutri-Score: {product.nutriscore_grade?.toUpperCase() || 'N/A'}</Text>
+          <Text>Eco-Score: {product.ecoscore_grade?.toUpperCase() || 'N/A'}</Text>
+
+          <View style={styles.spacer} />
+          <Button title="Scan Again" onPress={reset} />
+        </>
+      )}
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  cameraHolder: {
-    backgroundColor: "#00A784",
-    height: 200,
-    width: 300,
-    marginTop: 30,
-    marginLeft: 30,
-    borderRadius: 30,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+  container: {
+    padding: 20,
+    paddingTop: 50,
+    backgroundColor: '#fff',
+    flexGrow: 1,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 6,
+  },
+  error: {
+    color: 'red',
+    marginTop: 10,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  image: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
+    marginBottom: 10,
+  },
+  spacer: {
+    marginTop: 20,
   },
 });
-export default ProductScanScreen;
