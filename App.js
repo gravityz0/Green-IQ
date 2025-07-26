@@ -29,6 +29,7 @@ import SafeZoneAlerts from './screens/SafeZoneAlerts';
 import SafeZonesMap from './screens/SafeZonesMap';
 import ScanChoiceScreen from './screens/ScanChoiceScreen';
 import ProductScanScreen from './screens/ProductScanScreen';
+import ClassificationResultScreen from './screens/ClassificationResultScreen';
 
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -247,6 +248,7 @@ function App() {
           <Stack.Screen name="ScanChoice" component={ScanChoiceScreen} />
           <Stack.Screen name="Scan" component={ScanScreen} />
           <Stack.Screen name="ProductScan" component={ProductScanScreen} />
+          <Stack.Screen name="ClassificationResult" component={ClassificationResultScreen} />
 
         </Stack.Navigator>
       </NavigationContainer>

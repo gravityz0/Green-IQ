@@ -8,6 +8,7 @@ import Achievements from '../screens/Achievements';
 import ScanChoiceScreen from '../screens/ScanChoiceScreen';
 import ProductScanScreen from '../screens/ProductScanScreen';
 import ScanScreen from '../screens/ScanScreen';
+import ClassificationResultScreen from '../screens/ClassificationResultScreen';
 import { Text, View } from 'react-native';
 
 const Stack = createStackNavigator();
@@ -30,6 +31,7 @@ export default function AppNavigator() {
       <Stack.Screen name="ScanChoice" component={ScanChoiceScreen} options={{ title: 'Scan Options' }} />
       <Stack.Screen name="Scan" component={ScanScreen} options={{ title: 'Upload Waste Image' }} />
       <Stack.Screen name="ProductScan" component={ProductScanScreen} options={{ title: 'Scan Product' }} />
+      <Stack.Screen name="ClassificationResult" component={ClassificationResultScreen} />
       <Stack.Screen 
         name="CollectionPoints" 
         component={CollectionPoints} 

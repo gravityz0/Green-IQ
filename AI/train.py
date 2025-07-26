@@ -13,8 +13,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("waste_classifier_train")
 
 # --- Config ---
-DATASET_PATH = os.path.join(os.path.dirname(__file__), "data")
-MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "waste_classifier")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(SCRIPT_DIR, "data")
+MODEL_SAVE_PATH = os.path.join(SCRIPT_DIR, "waste_classifier")
+
+# Print paths for debugging
+logger.info(f"Script directory: {SCRIPT_DIR}")
+logger.info(f"Dataset path: {DATASET_PATH}")
+logger.info(f"Model save path: {MODEL_SAVE_PATH}")
+
+# Check if dataset path exists
+if not os.path.exists(DATASET_PATH):
+    logger.error(f"Dataset path does not exist: {DATASET_PATH}")
+    logger.info("Please ensure your dataset is structured as:")
+    logger.info("  data/")
+    logger.info("    biodegradable/")
+    logger.info("      image1.jpg")
+    logger.info("      image2.jpg")
+    logger.info("    non_biodegradable/")
+    logger.info("      image3.jpg")
+    logger.info("      image4.jpg")
+    sys.exit(1)
+
 LABEL2INFO = {
     0: {
         "label": "biodegradable",
@@ -40,7 +60,25 @@ LABEL2INFO = {
 
 # --- Dataset loading ---
 logger.info(f"Loading dataset from {DATASET_PATH}")
-dataset = load_dataset("imagefolder", data_dir=DATASET_PATH)
+try:
+    # Load dataset with O/R folder structure
+    dataset = load_dataset("imagefolder", data_dir=DATASET_PATH)
+    logger.info(f"Dataset loaded successfully. Features: {dataset['train'].features}")
+    logger.info(f"Number of training examples: {len(dataset['train'])}")
+    
+    try:
+        logger.info(f"Original label names: {dataset['train'].features['label'].names}")
+    except KeyError:
+        logger.warning("No label feature found")
+        
+    # Print some sample labels to understand the mapping
+    for i in range(min(3, len(dataset['train']))):
+        sample = dataset['train'][i]
+        logger.info(f"Sample {i}: label={sample['label']}")
+        
+except Exception as e:
+    logger.error(f"Failed to load dataset: {e}")
+    sys.exit(1)
 
 # --- Split train/val/test ---
 logger.info("Splitting dataset (80% train, 10% val, 10% test)")
@@ -52,55 +90,68 @@ dataset = DatasetDict({
     "test": val_test["test"]
 })
 
+logger.info(f"Train samples: {len(dataset['train'])}")
+logger.info(f"Val samples: {len(dataset['val'])}")
+logger.info(f"Test samples: {len(dataset['test'])}")
+
 # --- Preprocessing ---
 logger.info("Setting up transforms and processor")
-image_processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224")
-normalize = transforms.Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
-train_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    normalize,
-])
-test_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    normalize,
-])
+image_processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224", use_fast=True)
 
-def transform_example(example, transform):
-    img = example["image"]
-    if img.mode != "RGB":
-        img = img.convert("RGB")
-    example["pixel_values"] = transform(img)
-    return example
+# Updated preprocessing function that's compatible with the trainer
+def transform_images(examples):
+    """Transform a batch of images"""
+    images = [image.convert("RGB") if image.mode != "RGB" else image for image in examples["image"]]
+    # Use the image processor directly instead of manual transforms
+    inputs = image_processor(images, return_tensors="pt")
+    examples["pixel_values"] = inputs["pixel_values"]
+    return examples
 
-def preprocess_train(example):
-    return transform_example(example, train_transform)
+# --- Relabel O/R folders to biodegradable/non_biodegradable ---
+def relabel_OR_to_standard(example):
+    """Convert O/R labels to 0/1 (biodegradable/non_biodegradable)"""
+    # The imagefolder loader assigns labels based on alphabetical order
+    # So if your folders are O, R then: O=0, R=1
+    # But we want: O (organic) = 0 (biodegradable), R (recyclable) = 1 (non_biodegradable)
+    
+    # Check current label names
+    original_labels = dataset["train"].features['label'].names
+    logger.info(f"Original folder-based labels: {original_labels}")
+    
+    # If folders are in alphabetical order [O, R], labels are already correct
+    # If folders are [R, O], we need to flip them
+    if original_labels == ['O', 'R']:
+        # O=0 (biodegradable), R=1 (non_biodegradable) - already correct
+        return example
+    elif original_labels == ['R', 'O']:
+        # R=0, O=1 - need to flip
+        example['label'] = 1 - example['label']  # flip 0->1, 1->0
+        return example
+    else:
+        # Labels are already correct or use default mapping
+        return example
 
-def preprocess_test(example):
-    return transform_example(example, test_transform)
+# Apply relabeling first
+logger.info("Applying O/R to biodegradable/non_biodegradable relabeling...")
+dataset["train"] = dataset["train"].map(relabel_OR_to_standard)
+dataset["val"] = dataset["val"].map(relabel_OR_to_standard)
+dataset["test"] = dataset["test"].map(relabel_OR_to_standard)
 
-# --- Optional: Map R/O to correct labels if needed ---
-def relabel(example):
-    if hasattr(example["image"], "filename"):
-        if "/R/" in example["image"].filename or "\\R\\" in example["image"].filename:
-            example["label"] = 0
-        elif "/O/" in example["image"].filename or "\\O\\" in example["image"].filename:
-            example["label"] = 1
-    return example
+# Apply transforms
+logger.info("Applying transforms...")
+dataset["train"] = dataset["train"].map(transform_images, batched=True, batch_size=32)
+dataset["val"] = dataset["val"].map(transform_images, batched=True, batch_size=32)
+dataset["test"] = dataset["test"].map(transform_images, batched=True, batch_size=32)
 
-dataset["train"] = dataset["train"].map(relabel)
-dataset["val"] = dataset["val"].map(relabel)
-dataset["test"] = dataset["test"].map(relabel)
+# Set format for PyTorch
+dataset["train"].set_format("torch", columns=["pixel_values", "label"])
+dataset["val"].set_format("torch", columns=["pixel_values", "label"])
+dataset["test"].set_format("torch", columns=["pixel_values", "label"])
 
-dataset["train"] = dataset["train"].map(preprocess_train, batched=False)
-dataset["val"] = dataset["val"].map(preprocess_test, batched=False)
-dataset["test"] = dataset["test"].map(preprocess_test, batched=False)
-
+# Updated collate function
 def collate_fn(batch):
-    pixel_values = torch.stack([x["pixel_values"] for x in batch])
-    labels = torch.tensor([x["label"] for x in batch])
+    pixel_values = torch.stack([item["pixel_values"] for item in batch])
+    labels = torch.tensor([item["label"] for item in batch], dtype=torch.long)
     return {"pixel_values": pixel_values, "labels": labels}
 
 # --- Model ---
@@ -111,25 +162,28 @@ model = AutoModelForImageClassification.from_pretrained(
     "google/vit-base-patch16-224",
     num_labels=2,
     id2label=id2label,
-    label2id=label2id
+    label2id=label2id,
+    ignore_mismatched_sizes=True
 )
 
 # --- Training ---
 logger.info("Setting up Trainer and TrainingArguments")
 training_args = TrainingArguments(
-    output_dir=os.path.join(os.path.dirname(__file__), "vit_trainer_output"),
+    output_dir=os.path.join(SCRIPT_DIR, "vit_trainer_output"),
     per_device_train_batch_size=8,
     per_device_eval_batch_size=8,
-    evaluation_strategy="epoch",
+    eval_strategy="epoch",  # Fixed parameter name
     save_strategy="epoch",
     num_train_epochs=3,
     learning_rate=2e-5,
-    logging_dir=os.path.join(os.path.dirname(__file__), "vit_logs"),
+    logging_dir=os.path.join(SCRIPT_DIR, "vit_logs"),
     logging_steps=10,
     load_best_model_at_end=True,
     metric_for_best_model="accuracy",
     save_total_limit=1,
-    report_to=[]
+    report_to=[],
+    dataloader_pin_memory=False,  # Disable pin memory to avoid the warning
+    remove_unused_columns=False,  # Keep all columns
 )
 
 def compute_metrics(eval_pred):
@@ -148,10 +202,47 @@ trainer = Trainer(
 )
 
 logger.info("Starting training...")
-trainer.train()
+try:
+    trainer.train()
+    logger.info("Training completed successfully!")
+except Exception as e:
+    logger.error(f"Training failed: {e}")
+    sys.exit(1)
 
 # --- Save model and processor ---
 logger.info(f"Saving model to {MODEL_SAVE_PATH}")
-model.save_pretrained(MODEL_SAVE_PATH)
-image_processor.save_pretrained(MODEL_SAVE_PATH)
-logger.info("Training complete and model saved.") 
+try:
+    # Create directory if it doesn't exist
+    os.makedirs(MODEL_SAVE_PATH, exist_ok=True)
+    
+    model.save_pretrained(MODEL_SAVE_PATH)
+    image_processor.save_pretrained(MODEL_SAVE_PATH)
+    
+    # Verify files were saved
+    required_files = ["config.json", "pytorch_model.bin", "preprocessor_config.json"]
+    missing_files = []
+    for file in required_files:
+        if not os.path.exists(os.path.join(MODEL_SAVE_PATH, file)):
+            missing_files.append(file)
+    
+    if missing_files:
+        logger.warning(f"Some expected files are missing: {missing_files}")
+    else:
+        logger.info("All model files saved successfully!")
+    
+    logger.info(f"Model saved to: {os.path.abspath(MODEL_SAVE_PATH)}")
+    logger.info("Training complete and model saved.")
+    
+except Exception as e:
+    logger.error(f"Failed to save model: {e}")
+    sys.exit(1)
+
+# --- Test the saved model ---
+logger.info("Testing saved model...")
+try:
+    from transformers import AutoModelForImageClassification, AutoImageProcessor
+    test_model = AutoModelForImageClassification.from_pretrained(MODEL_SAVE_PATH, local_files_only=True)
+    test_processor = AutoImageProcessor.from_pretrained(MODEL_SAVE_PATH, local_files_only=True)
+    logger.info("✅ Model can be loaded successfully!")
+except Exception as e:
+    logger.error(f"❌ Failed to load saved model: {e}")

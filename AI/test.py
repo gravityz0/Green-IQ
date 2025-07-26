@@ -46,61 +46,109 @@ image_processor = AutoImageProcessor.from_pretrained(MODEL_PATH)
 model.eval()
 
 def predict_image(image_path, model, image_processor, device="cpu"):
-    image = Image.open(image_path).convert("RGB")
-    inputs = image_processor(images=image, return_tensors="pt")
-    inputs = {k: v.to(device) for k, v in inputs.items()}
-    with torch.no_grad():
-        outputs = model(**inputs)
-        probs = torch.softmax(outputs.logits, dim=1)
-        conf, pred = torch.max(probs, dim=1)
-        label_id = pred.item()
-        confidence = conf.item()
-    info = LABEL2INFO[label_id].copy()
-    info["confidence"] = round(confidence, 2)
-    return info
+    """Predict waste classification for a single image"""
+    try:
+        image = Image.open(image_path).convert("RGB")
+        inputs = image_processor(images=image, return_tensors="pt")
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        
+        with torch.no_grad():
+            outputs = model(**inputs)
+            probs = torch.softmax(outputs.logits, dim=1)
+            conf, pred = torch.max(probs, dim=1)
+            label_id = pred.item()
+            confidence = conf.item()
+        
+        info = LABEL2INFO[label_id].copy()
+        info["confidence"] = round(confidence, 2)
+        info["image_path"] = image_path
+        return info
+    
+    except Exception as e:
+        logger.error(f"Error processing image {image_path}: {str(e)}")
+        return {"error": str(e)}
 
-# --- Evaluate on test set ---
 def evaluate_on_test():
+    """Evaluate model on test dataset - FIXED VERSION"""
     logger.info(f"Loading test set from {DATASET_PATH}")
     dataset = load_dataset("imagefolder", data_dir=DATASET_PATH)
+    
     # Use the same split logic as train.py
     split = dataset["train"].train_test_split(test_size=0.2, seed=42)
     val_test = split["test"].train_test_split(test_size=0.5, seed=42)
     test_set = val_test["test"]
-    # Preprocessing
-    normalize = transforms.Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
-    test_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        normalize,
-    ])
+    
+    # Preprocessing function - FIXED
     def preprocess(example):
         img = example["image"]
         if img.mode != "RGB":
             img = img.convert("RGB")
-        example["pixel_values"] = test_transform(img)
+        
+        # Use the image_processor instead of manual transforms
+        # This ensures consistency with the training preprocessing
+        processed = image_processor(images=img, return_tensors="pt")
+        example["pixel_values"] = processed["pixel_values"].squeeze(0)  # Remove batch dimension
         return example
+    
     test_set = test_set.map(preprocess, batched=False)
+    
     # Evaluation
     correct = 0
     total = 0
+    
     for ex in test_set:
+        # Add batch dimension back
         pixel_values = ex["pixel_values"].unsqueeze(0)
+        
         with torch.no_grad():
             outputs = model(pixel_values=pixel_values)
             pred = torch.argmax(outputs.logits, dim=1).item()
+        
         if pred == ex["label"]:
             correct += 1
         total += 1
+    
     acc = correct / total if total > 0 else 0
     logger.info(f"Test set accuracy: {acc:.4f} ({correct}/{total})")
     return acc
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--image":
-        image_path = sys.argv[2]
+def main():
+    """Main function to handle command line arguments"""
+    if len(sys.argv) < 2:
+        print("Usage:")
+        print("  python test.py <image_path>           - Predict single image")
+        print("  python test.py --dataset              - Evaluate on test dataset")
+        print("  python test.py --help                 - Show this help")
+        return
+    
+    if sys.argv[1] == "--help":
+        print("Waste Classifier Test Script")
+        print("Usage:")
+        print("  python test.py <image_path>           - Predict single image")
+        print("  python test.py --dataset              - Evaluate on test dataset")
+        print("\nExample:")
+        print("  python test.py my_waste_image.jpg")
+        return
+    
+    elif sys.argv[1] == "--dataset":
+        logger.info("Evaluating on test dataset...")
+        evaluate_on_test()
+    
+    else:
+        # Single image prediction
+        image_path = sys.argv[1]
+        
+        if not os.path.exists(image_path):
+            logger.error(f"Image file not found: {image_path}")
+            return
+        
         logger.info(f"Predicting for image: {image_path}")
         result = predict_image(image_path, model, image_processor)
-        print(json.dumps(result, indent=2))
-    else:
-        evaluate_on_test() 
+        
+        if "error" in result:
+            print(f"Error: {result['error']}")
+        else:
+            print(json.dumps(result, indent=2))
+
+if __name__ == "__main__":
+    main()
