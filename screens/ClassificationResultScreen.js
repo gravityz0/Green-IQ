@@ -123,12 +123,12 @@ const ClassificationResultScreen = ({ route }) => {
   const videoByLabel = {
     biodegradable: [
       { url: 'https://www.youtube.com/shorts/U3ejVA6015A', title: 'How to Compost: The Ultimate Guide' },
-      { url: 'https://www.youtube.com/embed/3Gv2bR6U5rA', title: 'What is Biodegradable Waste?' },
-      { url: 'https://www.youtube.com/embed/3vMn8pZ_2gM', title: 'Composting for Beginners' },
+      { url: 'https://www.youtube.com/watch?v=sllhrTL_1Us', title: 'What is Biodegradable Waste?' },
+      { url: 'https://www.youtube.com/watch?v=4ECxHTf_Co4', title: 'Composting for Beginners' },
     ],
     non_biodegradable: [
-      { url: 'https://www.youtube.com/embed/6jQ7y_qQYUA', title: 'How Recycling Works: Behind the Scenes' },
-      { url: 'https://www.youtube.com/embed/7G6lGzF5r2A', title: 'The Problem with Plastic Waste' },
+      { url: 'https://www.youtube.com/shorts/3b55OCaP6GI', title: 'How Recycling Works: Behind the Scenes' },
+      { url: 'https://www.youtube.com/watch?v=YeVLBkypPRU', title: 'The Problem with Plastic Waste' },
       { url: 'https://www.youtube.com/embed/9yl6-HEY7_s', title: 'What Happens to Your Trash?' },
     ],
   };

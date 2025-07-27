@@ -29,7 +29,7 @@ const ScanScreen = () => {
   const [fallbackFact, setFallbackFact] = useState('');
 
   // Server configuration
-  const SERVER_URL = 'http://192.168.0.109:10000';
+  const SERVER_URL = 'http://192.168.0.105:10000';
 
   const ecoFacts = [
     'Recycling one aluminum can saves enough energy to run a TV for 3 hours.',

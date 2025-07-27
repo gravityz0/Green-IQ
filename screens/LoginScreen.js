@@ -278,32 +278,10 @@ const LoginScreen = ({ navigation }) => {
                   {/* Divider */}
                   <View style={styles.dividerContainer}>
                     <View style={styles.divider} />
-                    <Text style={[styles.dividerText, isSmallScreen && styles.dividerTextSmall, isTablet && styles.dividerTextTablet]}>
-                      or continue with
-                    </Text>
+                   
                     <View style={styles.divider} />
                   </View>
-                  {/* Social Login Buttons */}
-                  <View style={[styles.socialLoginContainer, isSmallScreen && styles.socialLoginContainerSmall, isTablet && styles.socialLoginContainerTablet]}>
-                    {[
-                      { name: 'logo-google', color: '#ea4335' },
-                      { name: 'logo-apple', color: '#000' },
-                      { name: 'logo-facebook', color: '#1877f2' },
-                      { name: 'logo-github', color: '#333' },
-                    ].map((social, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={[styles.socialButton, isSmallScreen && styles.socialButtonSmall, isTablet && styles.socialButtonTablet]}
-                        activeOpacity={0.7}
-                      >
-                        <Ionicons
-                          name={social.name}
-                          size={isTablet ? 28 : isSmallScreen ? 20 : 22}
-                          color={social.color}
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                 
                   {/* Sign Up Link */}
                   <View style={styles.signUpContainer}>
                     <Text style={[styles.signUpText, isSmallScreen && styles.signUpTextSmall, isTablet && styles.signUpTextTablet]}>

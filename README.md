@@ -1,7 +1,7 @@
-# Trash_IQ (Expo React Native App)
+# Green_IQ (Expo React Native App)
 
 ## Overview
-Trash_IQ is a modern, mobile-first React Native app (built with Expo) focused on waste management, recycling, and community engagement. It features real-time chat, AI-powered waste scanning, a government dashboard, and a map of collection points across Rwanda. The app is designed for both citizens and government officials, with role-based access and a clean, social-media-inspired UI.
+Green_IQ is a modern, mobile-first React Native app (built with Expo) focused on waste management, recycling, and community engagement. It features real-time chat, AI-powered waste scanning, a government dashboard, and a map of collection points across Rwanda. The app is designed for both citizens and government officials, with role-based access and a clean, social-media-inspired UI.
 
 ---
 
