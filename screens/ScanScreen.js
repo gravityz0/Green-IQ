@@ -30,6 +30,7 @@ const ScanScreen = () => {
 
   // Server configuration
   const SERVER_URL = 'http://192.168.0.105:10000';
+  const SERVER_URL_1 = 'https://waste-classifier-modal-6.onrender.com';
 
   const ecoFacts = [
     'Recycling one aluminum can saves enough energy to run a TV for 3 hours.',
