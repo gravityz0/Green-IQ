@@ -12,7 +12,6 @@ const WelcomeScreen = ({ navigation }) => {
   const titleSlideAnim = useRef(new Animated.Value(50)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   
-  // Floating particles animation
   const particleAnims = useRef(
     Array.from({ length: 6 }, () => ({
       translateY: new Animated.Value(0),
@@ -21,12 +20,10 @@ const WelcomeScreen = ({ navigation }) => {
     }))
   ).current;
 
-  // Button press animations
   const [loginScale] = useState(new Animated.Value(1));
   const [signupScale] = useState(new Animated.Value(1));
 
   useEffect(() => {
-    // Main entrance animation sequence
     Animated.sequence([
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -60,7 +57,6 @@ const WelcomeScreen = ({ navigation }) => {
       }),
     ]).start();
 
-    // Continuous logo pulse animation
     const pulseLoop = () => {
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -77,7 +73,6 @@ const WelcomeScreen = ({ navigation }) => {
     };
     pulseLoop();
 
-    // Floating particles animation
     particleAnims.forEach((particle, index) => {
       const animateParticle = () => {
         Animated.loop(

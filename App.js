@@ -10,6 +10,8 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/RegisterScreen';
 import HomeScreen from './screens/HomeScreen';
+import CompanyPortal from './screens/CompanyPortal';
+import EmployeeManagement from './screens/EmployeeManagement';
 import CollectionPoints from './screens/CollectionPoints';
 import Chat from './screens/Chat';
 import ScanScreen from './screens/ScanScreen';
@@ -148,7 +150,7 @@ function ChallengesScreen({ navigation }) {
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// The main app experience with the bottom tab bar
+// The main app experience with the bottom tab bar for citizens
 function AppTabs() {
   return (
     <Tab.Navigator
@@ -213,6 +215,66 @@ function AppTabs() {
   );
 }
 
+// Company portal with bottom tab bar
+function CompanyTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'CompanyHome') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'CollectionMgmt') {
+            iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'Scan') {
+            return (
+              <View style={styles.scanButtonContainer}>
+                <Ionicons name="scan" size={30} color="#fff" />
+              </View>
+            );
+          } else if (route.name === 'Analytics') {
+            iconName = focused ? 'analytics' : 'analytics-outline';
+          } else if (route.name === 'Employees') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'CompanyProfile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#2d6a4f',
+        tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+        tabBarLabelPosition: 'below-icon',
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowOpacity: 0.1,
+        },
+      })}
+    >
+      <Tab.Screen name="CompanyHome" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
+      <Tab.Screen name="CollectionMgmt" component={CollectionPoints} options={{ tabBarLabel: 'Collection' }} />
+      <Tab.Screen
+        name="Scan"
+        component={ScanScreen}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('ScanChoice');
+          },
+        })}
+        options={{ tabBarLabel: 'Scan' }}
+      />
+      <Tab.Screen name="Analytics" component={Dashboard} options={{ tabBarLabel: 'Analytics' }} />
+      <Tab.Screen name="Employees" component={EmployeeManagement} options={{ tabBarLabel: 'Employees' }} />
+      <Tab.Screen name="CompanyProfile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
+    </Tab.Navigator>
+  );
+}
+
 // The complete app navigation flow
 function App() {
   return (
@@ -232,6 +294,7 @@ function App() {
           
           {/* Main app screens (with tab bar) */}
           <Stack.Screen name="Home" component={AppTabs} />
+          <Stack.Screen name="CompanyHome" component={CompanyTabs} />
           <Stack.Screen name="Map" component={CollectionPoints} />
           <Stack.Screen name="Chat" component={Chat} />
           <Stack.Screen name="ChatInfo" component={ChatInfoScreen} />
@@ -249,6 +312,7 @@ function App() {
           <Stack.Screen name="Scan" component={ScanScreen} />
           <Stack.Screen name="ProductScan" component={ProductScanScreen} />
           <Stack.Screen name="ClassificationResult" component={ClassificationResultScreen} />
+          <Stack.Screen name="EmployeeManagement" component={EmployeeManagement} />
 
         </Stack.Navigator>
       </NavigationContainer>

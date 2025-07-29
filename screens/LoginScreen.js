@@ -34,7 +34,7 @@ const LoginScreen = ({ navigation }) => {
   const logoAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { setUser } = useContext(UserContext);
+  const { setUser, setUserType } = useContext(UserContext);
 
   const window = useWindowDimensions();
   const isTablet = window.width >= 700;
@@ -87,13 +87,24 @@ const LoginScreen = ({ navigation }) => {
         email,
         password
       });
+      
+      // Set user data and type
+      setUser(response.data);
+      setUserType(response.data.userType || 'citizen');
+      
       Toast.show({
         type: 'success',
         text1: 'Welcome Back!',
         text2: 'Login successful',
         position: 'top',
       });
-      navigation.navigate('Home');
+      
+      // Navigate based on user type
+      if (response.data.userType === 'company') {
+        navigation.navigate('CompanyHome');
+      } else {
+        navigation.navigate('Home');
+      }
     } catch (error) {
       Toast.show({
         type: 'error',

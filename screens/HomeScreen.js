@@ -68,7 +68,6 @@ const HomeScreen = ({ navigation }) => {
   const quickActionsAnim = useRef(new RNAnimated.Value(0)).current;
   
   const window = useWindowDimensions();
-  // Responsive: Use isTablet for breakpoints
   const isTablet = window.width >= 700;
   const isSmallDevice = window.width < 350;
 
@@ -102,8 +101,6 @@ const HomeScreen = ({ navigation }) => {
       }
     };
     getUserinfo();
-
-    // Enhanced animations
     RNAnimated.parallel([
       RNAnimated.spring(scanAnim, {
         toValue: 1,
@@ -123,7 +120,6 @@ const HomeScreen = ({ navigation }) => {
       }),
     ]).start();
 
-    // Continuous pulse animation for scan button
     const createPulse = () => {
       RNAnimated.sequence([
         RNAnimated.timing(pulseAnim, {
@@ -140,7 +136,6 @@ const HomeScreen = ({ navigation }) => {
     };
     createPulse();
 
-    // Eco tip rotation with fade effect
     const interval = setInterval(() => {
       RNAnimated.sequence([
         RNAnimated.timing(tipFadeAnim, {
@@ -207,7 +202,6 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // Remove 'Streak Days' from the stats array
   const defaultStats = [
     {
       icon: "leaf-outline",
@@ -230,7 +224,6 @@ const HomeScreen = ({ navigation }) => {
       color: "#4ECDC4",
       gradient: ["#4ECDC4", "#44A08D"],
     },
-    // Streak Days removed
   ];
   const stats = defaultStats;
 
@@ -262,23 +255,18 @@ const HomeScreen = ({ navigation }) => {
     { icon: "settings-outline", label: "Settings", action: () => navigation.navigate("Settings") },
   ];
 
-  // 1. Section Spacing and Max Width
   const compactSectionSpacing = [styles.sectionSpacing, isTablet ? { marginTop: 18, marginBottom: 18, paddingHorizontal: 28, maxWidth: 800 } : { marginTop: 18, marginBottom: 18, paddingHorizontal: 12, maxWidth: '95%' }];
 
-  // 2. Section Header Compact
   const compactSectionHeader = [styles.sectionHeader, { marginBottom: 10 }];
   const compactSectionTitle = [styles.sectionTitle, { fontSize: 16 }];
   const compactSeeAllText = [styles.seeAllText, { fontSize: 13 }];
 
-  // 3. Stat Card Compact
   const compactStatCard = [styles.statCard, isTablet ? { width: '30%', minWidth: 120, maxWidth: 220, padding: 12, borderRadius: 14, marginBottom: 14 } : { width: '47%', minWidth: 100, maxWidth: 180, padding: 10, borderRadius: 12, marginBottom: 12 }];
   const compactStatValue = [styles.statValue, { fontSize: 18 }];
   const compactStatLabel = [styles.statLabel, { fontSize: 11 }];
 
-  // 4. Progress Card Compact
   const compactProgressCard = [styles.progressCard, isTablet ? { marginBottom: 18, maxWidth: 800, borderRadius: 14, padding: 12 } : { marginBottom: 14, maxWidth: '95%', borderRadius: 12, padding: 8 }];
 
-  // 5. Badges Compact
   const compactBadgeCircle = (badge) => [
     styles.badgeCircle,
     {
@@ -294,22 +282,18 @@ const HomeScreen = ({ navigation }) => {
   ];
   const compactBadgeLabel = [styles.badgeLabel, { fontSize: 14 }];
 
-  // 6. Activity/Leaderboard Preview Limit
   const activityPreview = recentActivity.slice(0, 2);
   const leaderboardPreview = leaderboard.slice(0, 2);
 
-  // 7. Quick Links Compact
   const compactQuickLinksRow = [styles.quickLinksRow, isTablet ? { gap: 18, marginBottom: 18, maxWidth: 800 } : { gap: 10, marginBottom: 14, maxWidth: '95%' }];
   const compactQuickLinkIconWrap = [styles.quickLinkIconWrap, isTablet ? { padding: 12 } : { padding: 8 }];
   const compactQuickLinkLabel = [styles.quickLinkLabel, { fontSize: 11 }];
 
-  // 8. Daily Challenge Compact
   const compactDailyChallengeCard = [styles.dailyChallengeCard, isTablet ? { marginBottom: 18, maxWidth: 800, borderRadius: 14 } : { marginBottom: 14, maxWidth: '95%', borderRadius: 12 }];
   const compactDailyChallengeGradient = [styles.dailyChallengeGradient, isTablet ? { padding: 18, borderRadius: 14 } : { padding: 10, borderRadius: 12 }];
   const compactDailyChallengeTitle = [styles.dailyChallengeTitle, { fontSize: 14 }];
   const compactDailyChallengeText = [styles.dailyChallengeText, { fontSize: 11 }];
 
-  // Featured rewards for HomeScreen
   const featuredRewards = [
     {
       id: 1,
@@ -344,7 +328,6 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Simple Top Nav with User Name and Avatar */}
       <View style={styles.simpleTopNav}>
         <View style={styles.simpleTopNavLeft}>
           <Text style={styles.simpleTopNavGreeting}>Welcome back,</Text>
@@ -381,7 +364,6 @@ const HomeScreen = ({ navigation }) => {
           />
         }
       >
-        {/* Daily Challenge */}
         <TouchableOpacity style={compactDailyChallengeCard} onPress={() => navigation.navigate('Challenges')} activeOpacity={0.9}>
           <LinearGradient colors={["#fffbe6", "#e0f7fa"]} style={compactDailyChallengeGradient}>
             <View style={styles.dailyChallengeContent}>
@@ -394,7 +376,6 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </LinearGradient>
         </TouchableOpacity>
-        {/* Quick Links */}
         <View style={compactQuickLinksRow}>
           {[{ icon: 'scan-outline', label: 'Scan', nav: 'ScanChoice' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
             <TouchableOpacity key={item.label} style={styles.quickLinkButton} onPress={() => navigation.navigate(item.nav)} activeOpacity={0.85}>
@@ -405,7 +386,6 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
-        {/* Stats Grid */}
         <RNAnimated.View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
             <Text style={compactSectionTitle}>📊 My Eco-Impact</Text>
@@ -432,7 +412,6 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         </RNAnimated.View>
-        {/* Progress Card */}
         <RNAnimated.View style={compactProgressCard}>
           <TouchableOpacity onPress={() => navigation.navigate('Achievements')} activeOpacity={0.85}>
             <LinearGradient colors={["#E8F5E9", "#C8E6C9"]} style={styles.progressCardGradient}>
@@ -449,7 +428,6 @@ const HomeScreen = ({ navigation }) => {
             </LinearGradient>
           </TouchableOpacity>
         </RNAnimated.View>
-        {/* Achievements/Badges */}
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
             <Text style={compactSectionTitle}>🏅 Achievements</Text>
@@ -468,7 +446,6 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </ScrollView>
         </View>
-        {/* Activity Preview (2 items) */}
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
             <Text style={compactSectionTitle}>📈 Recent Activity</Text>
@@ -488,7 +465,6 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </LinearGradient>
         </View>
-        {/* Leaderboard Preview (2 items) */}
         <View style={compactSectionSpacing}>
           <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.85}>
             <View style={compactSectionHeader}>
@@ -514,7 +490,6 @@ const HomeScreen = ({ navigation }) => {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-        {/* EcoPoints Rewards & Marketplace */}
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
             <Text style={compactSectionTitle}>🎁 EcoPoints Rewards & Marketplace</Text>
@@ -534,8 +509,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
             ))}
           </ScrollView>
-        </View>
-        {/* Discover Section (optional, move to bottom) */}
+        </View> 
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
             <Text style={compactSectionTitle}>🌟 Discover</Text>
@@ -562,7 +536,6 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Quick Actions Menu */}
       {quickActionsVisible && (
         <RNAnimated.View 
           style={[
@@ -613,8 +586,7 @@ const HomeScreen = ({ navigation }) => {
           </>
         )}
       </RNAnimated.View>
-
-      {/* Floating Action Button */}
+        
       <TouchableOpacity 
         style={styles.fab}
         onPress={toggleQuickActions}

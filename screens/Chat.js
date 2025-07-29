@@ -22,14 +22,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Mock Data (can be replaced with API calls)
 const getMockMessages = (managerName) => [
   { id: '1', text: 'Welcome to our collection point chat! How can we help?', sender: 'manager', timestamp: new Date(Date.now() - 3600000) },
   { id: '2', text: 'Hi! I have some questions about waste collection.', sender: 'user', timestamp: new Date(Date.now() - 3500000) },
   { id: '3', text: 'Sure! What would you like to know?', sender: 'manager', timestamp: new Date(Date.now() - 3400000) },
   { id: '4', text: 'What types of waste do you accept?', sender: 'user', timestamp: new Date(Date.now() - 3300000) },
   { id: '5', text: 'We accept plastic, paper, and metal. Here\'s our schedule: Mon-Sat, 7am-6pm', sender: 'manager', timestamp: new Date(Date.now() - 3200000) },
-].reverse(); // Reverse for inverted FlatList
+].reverse(); 
 
 const getMockUsers = (managerName) => ({
   manager: { id: 'manager1', name: managerName, avatar: `https://i.pravatar.cc/150?u=${managerName}` },
@@ -38,7 +37,6 @@ const getMockUsers = (managerName) => ({
 
 const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
-// Reusable Message Bubble Component
 const MessageBubble = ({ message, isUser, user }) => {
   return (
     <View style={[styles.messageRow, isUser ? styles.messageRowUser : {}]}>
@@ -54,7 +52,6 @@ const MessageBubble = ({ message, isUser, user }) => {
   );
 };
 
-// Main Chat Component
 const Chat = ({ route, navigation }) => {
   const { pointName = "Select a Chat", pointManager = "Manager" } = route.params || {};
   const insets = useSafeAreaInsets();
@@ -123,14 +120,12 @@ const Chat = ({ route, navigation }) => {
       ),
     });
 
-    // Animate message list on mount
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
     }).start();
 
-    // Load initial messages only if a valid chat is selected
     if (route.params?.pointName) {
       setMessages(getMockMessages(pointManager));
     }
@@ -254,7 +249,6 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
-  // Empty state for when no chat is selected
   if (!route.params?.pointName) {
     return (
       <ImageBackground source={require('../assets/Back.png')} style={styles.container} imageStyle={{ opacity: 0.1 }}>
@@ -272,7 +266,6 @@ const Chat = ({ route, navigation }) => {
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       <ImageBackground source={require('../assets/Back.png')} style={styles.container} imageStyle={{ opacity: 0.1 }}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
@@ -292,7 +285,6 @@ const Chat = ({ route, navigation }) => {
           style={styles.keyboardAvoidingView}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-          {/* Chat List */}
           <FlatList
             data={messages}
             renderItem={({ item }) => <MessageBubble message={item} isUser={item.sender === 'user'} user={users[item.sender]} />}
@@ -301,7 +293,6 @@ const Chat = ({ route, navigation }) => {
             inverted
             contentContainerStyle={{ paddingBottom: insets.bottom + 70, paddingTop: 10 }}
           />
-          {/* Input Bar */}
           <View style={[styles.inputContainer, { marginBottom: insets.bottom }]}> 
             <TouchableOpacity style={styles.inputButton}>
               <Ionicons name="add" size={28} color="#2d6a4f" />
@@ -326,23 +317,19 @@ const Chat = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#eef2f3' },
   keyboardAvoidingView: { flex: 1 },
-  // Empty State
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   emptyText: { fontSize: 18, textAlign: 'center', color: '#666', marginTop: 20 },
   browseButton: { marginTop: 30, backgroundColor: '#2d6a4f', paddingVertical: 15, paddingHorizontal: 30, borderRadius: 30 },
   browseButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  // Header
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.8)', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
   headerButton: { padding: 8 },
   headerAvatar: { width: 40, height: 40, borderRadius: 20, marginRight: 12 },
   headerTitle: { fontSize: 17, fontWeight: 'bold', color: '#1b4332' },
-  headerSubtitle: { fontSize: 13, color: '#6c757d' },
-  // Chat List
+  headerSubtitle: { fontSize: 13, color: '#6c757d' },   
   chatList: { paddingHorizontal: 12, paddingTop: 10 },
   messageRow: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 15 },
   messageRowUser: { justifyContent: 'flex-end' },
   avatar: { width: 32, height: 32, borderRadius: 16, marginRight: 8 },
-  // Bubbles
   bubble: { maxWidth: '75%', borderRadius: 18, paddingVertical: 10, paddingHorizontal: 16, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   bubbleUser: { backgroundColor: '#2d6a4f', borderBottomRightRadius: 4 },
   bubbleManager: { backgroundColor: '#fff', borderBottomLeftRadius: 4 },
@@ -350,7 +337,6 @@ const styles = StyleSheet.create({
   bubbleTextManager: { color: '#222', fontSize: 16 },
   bubbleFooter: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 6 },
   timestamp: { fontSize: 11, color: '#a0a0a0' },
-  // Input Bar
   inputContainer: { flexDirection: 'row', alignItems: 'center', padding: 12, backgroundColor: '#fff' },
   textInput: { flex: 1, backgroundColor: '#f0f2f5', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, marginRight: 10 },
   inputButton: { padding: 8, marginRight: 4 },
