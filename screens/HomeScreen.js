@@ -234,12 +234,6 @@ const HomeScreen = ({ navigation }) => {
     { id: 4, name: 'Streak', icon: 'flame', earned: user?.streakDays > 7, color: '#FF5722' },
   ];
 
-  const recentActivity = [
-    { id: 1, text: 'You scanned a plastic bottle', icon: 'leaf-outline', time: '2h ago', color: '#00C896' },
-    { id: 2, text: 'You earned 50 points', icon: 'trophy-outline', time: '4h ago', color: '#FF6B35' },
-    { id: 3, text: 'Joined the community chat', icon: 'chatbubbles-outline', time: '1d ago', color: '#4ECDC4' },
-  ];
-
   const leaderboard = [
     { id: 1, name: 'EcoWarrior John', points: 15430, avatar: null },
     { id: 2, name: 'Green Sarah', points: 12890, avatar: null },
@@ -282,7 +276,6 @@ const HomeScreen = ({ navigation }) => {
   ];
   const compactBadgeLabel = [styles.badgeLabel, { fontSize: 14 }];
 
-  const activityPreview = recentActivity.slice(0, 2);
   const leaderboardPreview = leaderboard.slice(0, 2);
 
   const compactQuickLinksRow = [styles.quickLinksRow, isTablet ? { gap: 18, marginBottom: 18, maxWidth: 800 } : { gap: 10, marginBottom: 14, maxWidth: '95%' }];
@@ -397,7 +390,7 @@ const HomeScreen = ({ navigation }) => {
             {stats.map((stat, index) => (
               <TouchableOpacity key={index} style={compactStatCard} activeOpacity={0.9} accessibilityLabel={stat.label} onPress={() => {
                 if (stat.label === 'Eco Points') navigation.navigate('EcoPointsDetails');
-                else if (stat.label === 'Items Recycled') navigation.navigate('Activity');
+                else if (stat.label === 'Items Recycled') navigation.navigate('Leaderboard');
                 else if (stat.label === 'Community Rank') navigation.navigate('Leaderboard');
                 else if (stat.label === 'Streak Days') navigation.navigate('Achievements');
               }}>
@@ -448,47 +441,26 @@ const HomeScreen = ({ navigation }) => {
         </View>
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>📈 Recent Activity</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Activity')}>
-              <Text style={compactSeeAllText}>See All</Text>
-            </TouchableOpacity>
+            <Text style={compactSectionTitle}>🏆 Top Recyclers</Text>
+            <Text style={compactSeeAllText}>See All</Text>
           </View>
-          <LinearGradient colors={["#fff", "#fafafa"]} style={styles.activityGradient}>
-            {activityPreview.map((item, index) => (
-              <TouchableOpacity key={item.id} onPress={() => navigation.navigate('Activity')} activeOpacity={0.8}>
-                <RNAnimated.View style={[styles.activityRow, { opacity: fadeAnim, transform: [{ translateX: slideAnim.interpolate({ inputRange: [0, 50], outputRange: [0, index * 10 + 20] }) }] }]}>
-                  <View style={[styles.activityIconContainer, { backgroundColor: item.color + '20' }]}><Ionicons name={item.icon} size={isTablet ? 14 : 10} color="#FF6B35" /></View>
-                  <Text style={[styles.activityText, { fontSize: 11 }]}>{item.text}</Text>
-                  <Text style={[styles.activityTime, { fontSize: 9 }]}>{item.time}</Text>
-                </RNAnimated.View>
+          <LinearGradient colors={["#fff", "#fff8e1"]} style={styles.leaderboardGradient}>
+            {leaderboardPreview.map((user, idx) => (
+              <TouchableOpacity key={user.id} onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.8}>
+                <View style={[styles.leaderboardRow, { paddingVertical: 6, paddingHorizontal: 8 }] }>
+                  <View style={styles.leaderboardPosition}>
+                    <Ionicons name="trophy" size={isTablet ? 14 : 10} color={idx === 0 ? '#FFD700' : idx === 1 ? '#FF3D57' : '#FF6B35'} />
+                    <Text style={[styles.leaderboardRank, { fontSize: 10 } ]}>#{idx + 1}</Text>
+                  </View>
+                  <Text style={[styles.leaderboardName, { fontSize: 11 }]} numberOfLines={1}>{user.name}</Text>
+                  <View style={styles.leaderboardPointsContainer}>
+                    <Text style={[styles.leaderboardPoints, { fontSize: 11 }]}>{user.points.toLocaleString()}</Text>
+                    <Text style={[styles.leaderboardPointsLabel, { fontSize: 9 }]}>pts</Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             ))}
           </LinearGradient>
-        </View>
-        <View style={compactSectionSpacing}>
-          <TouchableOpacity onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.85}>
-            <View style={compactSectionHeader}>
-              <Text style={compactSectionTitle}>🏆 Top Recyclers</Text>
-              <Text style={compactSeeAllText}>See All</Text>
-            </View>
-            <LinearGradient colors={["#fff", "#fff8e1"]} style={styles.leaderboardGradient}>
-              {leaderboardPreview.map((user, idx) => (
-                <TouchableOpacity key={user.id} onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.8}>
-                  <View style={[styles.leaderboardRow, { paddingVertical: 6, paddingHorizontal: 8 }] }>
-                    <View style={styles.leaderboardPosition}>
-                      <Ionicons name="trophy" size={isTablet ? 14 : 10} color={idx === 0 ? '#FFD700' : idx === 1 ? '#FF3D57' : '#FF6B35'} />
-                      <Text style={[styles.leaderboardRank, { fontSize: 10 } ]}>#{idx + 1}</Text>
-                    </View>
-                    <Text style={[styles.leaderboardName, { fontSize: 11 }]} numberOfLines={1}>{user.name}</Text>
-                    <View style={styles.leaderboardPointsContainer}>
-                      <Text style={[styles.leaderboardPoints, { fontSize: 11 }]}>{user.points.toLocaleString()}</Text>
-                      <Text style={[styles.leaderboardPointsLabel, { fontSize: 9 }]}>pts</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
         <View style={compactSectionSpacing}>
           <View style={compactSectionHeader}>
@@ -1026,57 +998,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
     marginTop: 2,
-  },
-  activitySection: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  activityGradient: {
-    borderRadius: 16,
-    padding: 8,
-  },
-  activitySectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1B5E20',
-    marginBottom: 10,
-  },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    paddingVertical: 8,
-  },
-  activityIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  activityText: {
-    flex: 1,
-    color: '#222',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  activityTime: {
-    color: '#888',
-    fontSize: 12,
-    marginLeft: 8,
-    fontWeight: '600',
   },
   leaderboardPreview: {
     marginHorizontal: 20,

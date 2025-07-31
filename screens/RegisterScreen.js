@@ -34,6 +34,8 @@ const RegisterScreen = ({ navigation, route }) => {
   const [location, setLocation] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [companyContact, setCompanyContact] = useState('');
+  const [wasteTypes, setWasteTypes] = useState([]);
+  const [selectedWasteType, setSelectedWasteType] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,8 +75,8 @@ const RegisterScreen = ({ navigation, route }) => {
         return;
       }
     } else {
-      if (!companyName || !email || !phoneNumber || !password || !confirmPassword || !companyAddress || !companyContact) {
-        Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields for company registration.' });
+      if (!companyName || !email || !phoneNumber || !password || !confirmPassword || !companyAddress || !companyContact || wasteTypes.length === 0) {
+        Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields for company registration, including waste types.' });
         return;
       }
     }
@@ -102,7 +104,8 @@ const RegisterScreen = ({ navigation, route }) => {
         } : {
           companyName,
           companyAddress,
-          companyContact
+          companyContact,
+          wasteTypes
         })
       };
 
@@ -250,6 +253,36 @@ const RegisterScreen = ({ navigation, route }) => {
                           value={companyContact} 
                           onChangeText={setCompanyContact} 
                         />
+                      </View>
+                      
+                      {/* Waste Types Selection */}
+                      <View style={styles.wasteTypesContainer}>
+                        <Text style={styles.wasteTypesTitle}>Waste Types You Collect:</Text>
+                        <View style={styles.wasteTypesGrid}>
+                          {['Plastic', 'Paper', 'Glass', 'Metal', 'Electronics', 'Organic', 'Textiles', 'Batteries'].map((type) => (
+                            <TouchableOpacity
+                              key={type}
+                              style={[
+                                styles.wasteTypeButton,
+                                wasteTypes.includes(type) && styles.wasteTypeButtonActive
+                              ]}
+                              onPress={() => {
+                                if (wasteTypes.includes(type)) {
+                                  setWasteTypes(wasteTypes.filter(t => t !== type));
+                                } else {
+                                  setWasteTypes([...wasteTypes, type]);
+                                }
+                              }}
+                            >
+                              <Text style={[
+                                styles.wasteTypeText,
+                                wasteTypes.includes(type) && styles.wasteTypeTextActive
+                              ]}>
+                                {type}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
                       </View>
                     </>
                   )}
@@ -645,6 +678,39 @@ const styles = StyleSheet.create({
     color: '#11998e',
   },
   userTypeTextActive: {
+    color: '#fff',
+  },
+  wasteTypesContainer: {
+    marginBottom: 20,
+  },
+  wasteTypesTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  wasteTypesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  wasteTypeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#11998e',
+    backgroundColor: '#fff',
+  },
+  wasteTypeButtonActive: {
+    backgroundColor: '#11998e',
+  },
+  wasteTypeText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#11998e',
+  },
+  wasteTypeTextActive: {
     color: '#fff',
   },
 });

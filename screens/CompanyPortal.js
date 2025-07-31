@@ -48,6 +48,21 @@ const companyTips = [
     text: '📈 Fact: Sustainable practices can improve your company\'s public image and attract eco-conscious customers.',
     likes: 89,
     liked: false
+  },
+  { 
+    text: '📋 Tip: Track your waste collection data to identify opportunities for improvement and cost savings.',
+    likes: 56,
+    liked: false
+  },
+  { 
+    text: '🎯 Fact: Companies with strong environmental policies often have higher employee engagement scores.',
+    likes: 73,
+    liked: false
+  },
+  { 
+    text: '💡 Tip: Regular training sessions on waste segregation can significantly improve recycling rates.',
+    likes: 41,
+    liked: false
   }
 ];
 
@@ -168,39 +183,19 @@ const CompanyPortal = ({ navigation }) => {
     }).start();
   };
 
-  const handleScanPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    navigation.navigate('ScanChoice');
-  };
-
   const handleMapPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('SafeZonesMap');
   };
 
-  const handleRewardsPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Rewards');
-  };
-
-  const handleCommunityPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Community');
-  };
-
   const handleProfilePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Profile');
-  };
-
-  const handleDashboardPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('Dashboard');
+    navigation.navigate('CompanyProfile');
   };
 
   const handleCollectionManagementPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('CollectionManagement');
+    navigation.navigate('CollectionMgmt');
   };
 
   const handleAnalyticsPress = () => {
@@ -210,7 +205,7 @@ const CompanyPortal = ({ navigation }) => {
 
   const handleEmployeeManagementPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('EmployeeManagement');
+    navigation.navigate('Employees');
   };
 
   const compactBadgeCircle = (badge) => [
@@ -303,6 +298,23 @@ const CompanyPortal = ({ navigation }) => {
                 <Text style={styles.statLabel}>Employees</Text>
               </View>
             </View>
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Ionicons name="trending-up" size={24} color="#11998e" />
+                <Text style={styles.statNumber}>$1,250</Text>
+                <Text style={styles.statLabel}>Cost Savings</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Ionicons name="calendar" size={24} color="#11998e" />
+                <Text style={styles.statNumber}>12</Text>
+                <Text style={styles.statLabel}>Collection Days</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Ionicons name="checkmark-circle" size={24} color="#11998e" />
+                <Text style={styles.statNumber}>85%</Text>
+                <Text style={styles.statLabel}>Efficiency Rate</Text>
+              </View>
+            </View>
           </RNAnimated.View>
 
           {/* Quick Actions */}
@@ -317,19 +329,6 @@ const CompanyPortal = ({ navigation }) => {
           >
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={styles.quickActionsGrid}>
-              <TouchableOpacity
-                style={styles.quickActionCard}
-                onPress={handleScanPress}
-              >
-                <LinearGradient
-                  colors={["#11998e", "#43e97b"]}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="scan" size={32} color="#fff" />
-                  <Text style={styles.quickActionText}>Scan Waste</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
               <TouchableOpacity
                 style={styles.quickActionCard}
                 onPress={handleCollectionManagementPress}
@@ -366,6 +365,19 @@ const CompanyPortal = ({ navigation }) => {
                 >
                   <Ionicons name="people-circle" size={32} color="#fff" />
                   <Text style={styles.quickActionText}>Employees</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.quickActionCard}
+                onPress={handleMapPress}
+              >
+                <LinearGradient
+                  colors={["#11998e", "#43e97b"]}
+                  style={styles.quickActionGradient}
+                >
+                  <Ionicons name="map" size={32} color="#fff" />
+                  <Text style={styles.quickActionText}>Collection Points</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -407,53 +419,6 @@ const CompanyPortal = ({ navigation }) => {
                   <Text style={styles.nextTipText}>Next Tip</Text>
                   <Ionicons name="chevron-forward" size={16} color="#11998e" />
                 </TouchableOpacity>
-              </View>
-            </View>
-          </RNAnimated.View>
-
-          {/* Recent Activity */}
-          <RNAnimated.View
-            style={[
-              styles.activityContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <View style={styles.activityList}>
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons name="recycle" size={16} color="#11998e" />
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>Plastic waste collected</Text>
-                  <Text style={styles.activityTime}>2 hours ago</Text>
-                </View>
-                <Text style={styles.activityAmount}>+15 items</Text>
-              </View>
-              
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons name="leaf" size={16} color="#11998e" />
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>CO2 emissions reduced</Text>
-                  <Text style={styles.activityTime}>1 day ago</Text>
-                </View>
-                <Text style={styles.activityAmount}>+2.5 kg</Text>
-              </View>
-              
-              <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                  <Ionicons name="people" size={16} color="#11998e" />
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>New employee joined</Text>
-                  <Text style={styles.activityTime}>3 days ago</Text>
-                </View>
-                <Text style={styles.activityAmount}>+1 member</Text>
               </View>
             </View>
           </RNAnimated.View>
@@ -538,6 +503,7 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   statCard: {
     flex: 1,
@@ -657,53 +623,6 @@ const styles = StyleSheet.create({
     color: '#11998e',
     fontWeight: '600',
     marginRight: 4,
-  },
-  activityContainer: {
-    paddingHorizontal: 20,
-  },
-  activityList: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  activityIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f0f8f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  activityTime: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  activityAmount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#11998e',
   },
 });
 

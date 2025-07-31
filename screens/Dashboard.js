@@ -438,25 +438,6 @@ const Dashboard = () => {
           </View>
         );
 
-      case 'activity':
-        return (
-          <View>
-            <Text style={styles.sectionTitle}>Recent Activities</Text>
-            {mockStats.recentActivities.map((activity) => (
-              <View key={activity.id} style={styles.activityCard}>
-                <View style={[styles.activityIcon, { backgroundColor: getActivityColor(activity.type) }]}>
-                  <Ionicons name={getActivityIcon(activity.type)} size={20} color="#fff" />
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityAction}>{activity.action}</Text>
-                  <Text style={styles.activityLocation}>{activity.location}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        );
-
       default:
         return null;
     }
@@ -501,11 +482,10 @@ const Dashboard = () => {
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {[
+          {[ 
             { key: 'overview', label: 'Overview', icon: 'analytics' },
             { key: 'points', label: 'Collection Points', icon: 'location' },
             { key: 'analytics', label: 'Analytics', icon: 'pie-chart' },
-            { key: 'activity', label: 'Activity', icon: 'time' },
           ].map((tab) => (
             <TouchableOpacity
               key={tab.key}
@@ -889,44 +869,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
-  },
-  activityCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityAction: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  activityLocation: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  activityTime: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
