@@ -28,7 +28,7 @@ const ScanScreen = () => {
   const [showFallback, setShowFallback] = useState(false);
   const [fallbackFact, setFallbackFact] = useState('');
 
-  const SERVER_URL = 'https://waste-classifier-modal-7.onrender.com';
+  const SERVER_URL = 'https://waste-classifier-modal-2.onrender.com/predict';
   const SERVER_URL_1 = 'https://waste-classifier-modal-6.onrender.com';
 
   const ecoFacts = [
