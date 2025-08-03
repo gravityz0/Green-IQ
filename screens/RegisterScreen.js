@@ -33,7 +33,7 @@ const RegisterScreen = ({ navigation, route }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [location, setLocation] = useState('');
-  const [companyAddress, setCompanyAddress] = useState('');
+  const [companyLocation, setCompanyLocation] = useState('');
   const [companyContact, setCompanyContact] = useState('');
   const [wasteTypes, setWasteTypes] = useState([]);
   const [selectedWasteType, setSelectedWasteType] = useState('');
@@ -58,9 +58,13 @@ const RegisterScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (route?.params?.selectedLocation) {
-      setLocation(route.params.selectedLocation);
+      if (userType === 'citizen') {
+        setLocation(route.params.selectedLocation);
+      } else {
+        setCompanyLocation(route.params.selectedLocation);
+      }
     }
-  }, [route?.params?.selectedLocation]);
+  }, [route?.params?.selectedLocation, userType]);
 
   const validatePhoneNumber = (phone) => {
     // Basic validation for Rwandan phone numbers
@@ -76,7 +80,7 @@ const RegisterScreen = ({ navigation, route }) => {
         return;
       }
     } else {
-      if (!companyName || !email || !phoneNumber || !password || !confirmPassword || !companyAddress || !companyContact || wasteTypes.length === 0) {
+      if (!companyName || !email || !phoneNumber || !password || !confirmPassword || !companyLocation || !companyContact || wasteTypes.length === 0) {
         Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields for company registration, including waste types.' });
         return;
       }
@@ -104,7 +108,7 @@ const RegisterScreen = ({ navigation, route }) => {
           userAddress: location
         } : {
           companyName,
-          companyAddress,
+          companyAddress: companyLocation,
           companyContact,
           wasteTypes
         }),
@@ -251,16 +255,12 @@ const RegisterScreen = ({ navigation, route }) => {
                     </TouchableOpacity>
                   ) : (
                     <>
-                      <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                      <TouchableOpacity onPress={() => navigation.navigate('LocationSelection')} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
                         <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                        <TextInput 
-                          style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} 
-                          placeholder="Company Address" 
-                          placeholderTextColor="#888" 
-                          value={companyAddress} 
-                          onChangeText={setCompanyAddress} 
-                        />
-                      </View>
+                        <Text style={[styles.input, styles.locationText, !companyLocation && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{companyLocation || 'Select Collection Point Location'}</Text>
+                        <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
+                      </TouchableOpacity>
+                      
                       <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
                         <Ionicons name="person-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
                         <TextInput 
@@ -276,7 +276,7 @@ const RegisterScreen = ({ navigation, route }) => {
                       <View style={styles.wasteTypesContainer}>
                         <Text style={styles.wasteTypesTitle}>Waste Types You Collect:</Text>
                         <View style={styles.wasteTypesGrid}>
-                          {['Plastic', 'Paper', 'Glass', 'Metal', 'Electronics', 'Organic', 'Textiles', 'Batteries'].map((type) => (
+                          {['Biodegradable', 'Non biodegradable', 'Recyclable', 'Hazardous',"Organic","Inorganic"].map((type) => (
                             <TouchableOpacity
                               key={type}
                               style={[
