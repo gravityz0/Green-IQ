@@ -12,6 +12,7 @@ import SignupScreen from './screens/RegisterScreen';
 import HomeScreen from './screens/HomeScreen';
 import CompanyPortal from './screens/CompanyPortal';
 import EmployeeManagement from './screens/EmployeeManagement';
+import CollectionManagement from './screens/CollectionManagement';
 import CollectionPoints from './screens/CollectionPoints';
 import Chat from './screens/Chat';
 import ScanScreen from './screens/ScanScreen';
@@ -227,12 +228,6 @@ function CompanyTabs() {
             iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'CollectionMgmt') {
             iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Scan') {
-            return (
-              <View style={styles.scanButtonContainer}>
-                <Ionicons name="scan" size={30} color="#fff" />
-              </View>
-            );
           } else if (route.name === 'Analytics') {
             iconName = focused ? 'analytics' : 'analytics-outline';
           } else if (route.name === 'Employees') {
@@ -256,18 +251,7 @@ function CompanyTabs() {
       })}
     >
       <Tab.Screen name="CompanyHome" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
-      <Tab.Screen name="CollectionMgmt" component={CollectionPoints} options={{ tabBarLabel: 'Collection' }} />
-      <Tab.Screen
-        name="Scan"
-        component={ScanScreen}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('ScanChoice');
-          },
-        })}
-        options={{ tabBarLabel: 'Scan' }}
-      />
+      <Tab.Screen name="CollectionMgmt" component={CollectionManagement} options={{ tabBarLabel: 'Collection' }} />
       <Tab.Screen name="Analytics" component={Dashboard} options={{ tabBarLabel: 'Analytics' }} />
       <Tab.Screen name="Employees" component={EmployeeManagement} options={{ tabBarLabel: 'Employees' }} />
       <Tab.Screen name="CompanyProfile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
@@ -313,6 +297,7 @@ function App() {
           <Stack.Screen name="ProductScan" component={ProductScanScreen} />
           <Stack.Screen name="ClassificationResult" component={ClassificationResultScreen} />
           <Stack.Screen name="EmployeeManagement" component={EmployeeManagement} />
+          <Stack.Screen name="CollectionManagement" component={CollectionManagement} />
 
         </Stack.Navigator>
       </NavigationContainer>
