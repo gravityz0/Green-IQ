@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "name": "Trash2Treasure",
   "license": "0BSD",
@@ -52,7 +51,6 @@
   },
   "private": true
 }
-=======
 {
   "name": "Trash2Treasure",
   "license": "0BSD",
@@ -105,4 +103,4 @@
   },
   "private": true
 }
->>>>>>> b709ec25a0ed59da65b1e3223fc589894a46cadf
+
