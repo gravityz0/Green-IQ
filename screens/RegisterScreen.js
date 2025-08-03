@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import {
   StyleSheet,
   View,
@@ -14,20 +14,26 @@ import {
   Platform,
   Dimensions,
   useWindowDimensions,
-  ActivityIndicator
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import Toast from 'react-native-toast-message';
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import Toast from "react-native-toast-message";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const RegisterScreen = ({ navigation, route }) => {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [location, setLocation] = useState('');
+  const [userType, setUserType] = useState("citizen");
+  const [fullName, setFullName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("+250");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [location, setLocation] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyContact, setCompanyContact] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,36 +59,119 @@ const RegisterScreen = ({ navigation, route }) => {
     }
   }, [route?.params?.selectedLocation]);
 
+  const validatePhoneNumber = (phone) => {
+    // Basic validation for Rwandan phone numbers
+    const phoneRegex = /^\+250[0-9]{8}$/;
+    return phoneRegex.test(phone);
+  };
+
   const handleRegister = async () => {
-    if (!fullName || !email || !password || !confirmPassword || !location) {
-      Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill out all fields, including location.' });
-      return;
+    // Validate required fields based on user type
+    if (userType === "citizen") {
+      if (
+        !fullName ||
+        !email ||
+        !phoneNumber ||
+        !password ||
+        !confirmPassword ||
+        !location
+      ) {
+        Toast.show({
+          type: "error",
+          text1: "Missing Fields",
+          text2: "Please fill out all fields for citizen registration.",
+        });
+        return;
+      }
+    } else {
+      if (
+        !companyName ||
+        !email ||
+        !phoneNumber ||
+        !password ||
+        !confirmPassword ||
+        !companyAddress ||
+        !companyContact
+      ) {
+        Toast.show({
+          type: "error",
+          text1: "Missing Fields",
+          text2: "Please fill out all fields for company registration.",
+        });
+        return;
+      }
     }
+
     if (password !== confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Password Mismatch', text2: 'Passwords do not match.' });
+      Toast.show({
+        type: "error",
+        text1: "Password Mismatch",
+        text2: "Passwords do not match.",
+      });
       return;
     }
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    setIsLoading(false);
-    try {
-      const response = await axios.post('https://trash2treasure-backend.onrender.com/register', {
-        fullNames: fullName,
-        email,
-        password,
-        userAddress: location
-      });
+
+    if (!validatePhoneNumber(phoneNumber)) {
       Toast.show({
-        type: 'success',
-        text1: 'Verify account',
-        text2: 'Check your email to verify your account'
+        type: "error",
+        text1: "Invalid Phone Number",
+        text2: "Please enter a valid Rwandan phone number (+250XXXXXXXX).",
       });
-      setTimeout(() => navigation.navigate('Login'), 1500);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (userType === "citizen") {
+        const response = await axios.post(
+          "https://trash2treasure-backend.onrender.com/register",
+          {
+            email,
+            fullNames: fullName,
+            password,
+            userAddress,
+            phoneNumber,
+            userType,
+            referralUsed,
+          }
+        );
+        Toast.show({
+          type: "success",
+          text1: "Account Created",
+          text2:
+            userType === "citizen"
+              ? "Check your email to verify your account"
+              : "Company account created successfully",
+        });
+        setTimeout(() => navigation.navigate("Login"), 1500);
+      } else {
+        const response = await axios.post(
+          "https://trash2treasure-backend.onrender.com/registerCompany",
+          {
+            companyName,
+            email,
+            phoneNumber,
+            companyAddress,
+            contactPersonalName: companyContact,
+            password,
+            wasteType,
+          }
+        );
+        Toast.show({
+          type: "success",
+          text1: "Account Created",
+          text2:
+            userType === "citizen"
+              ? "Check your email to verify your account"
+              : "Company account created successfully",
+        });
+        setTimeout(() => navigation.navigate("Login"), 1500);
+      }
     } catch (error) {
       Toast.show({
-        type: 'error',
-        text1: 'Registration failed',
-        text2: error?.response?.data?.message || 'Registration failed.'
+        type: "error",
+        text1: "Registration failed",
+        text2: error?.response?.data?.message || "Registration failed.",
       });
     } finally {
       setIsLoading(false);
@@ -90,17 +179,19 @@ const RegisterScreen = ({ navigation, route }) => {
   };
 
   return (
-    <LinearGradient
-      colors={["#43e97b", "#11998e"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#43e97b", "#11998e"]} style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#43e97b" />
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={[styles.centerWrapper, isTablet && styles.centerWrapperTablet]}>
+          <View
+            style={[
+              styles.centerWrapper,
+              isTablet && styles.centerWrapperTablet,
+            ]}
+          >
             <ScrollView
               contentContainerStyle={[
                 styles.scrollViewContent,
@@ -113,8 +204,13 @@ const RegisterScreen = ({ navigation, route }) => {
             >
               {/* Catchy Headline and Subtitle */}
               <View style={styles.attractHeader}>
-                <Text style={styles.attractTitle}>Join Green IQ and Make a Difference!</Text>
-                <Text style={styles.attractSubtitle}>Sign up to start recycling smarter, earning rewards, and helping the planet. It only takes a minute!</Text>
+                <Text style={styles.attractTitle}>
+                  Join Green IQ and Make a Difference!
+                </Text>
+                <Text style={styles.attractSubtitle}>
+                  Sign up to start recycling smarter, earning rewards, and
+                  helping the planet. It only takes a minute!
+                </Text>
               </View>
               <Animated.View
                 style={[
@@ -135,44 +231,399 @@ const RegisterScreen = ({ navigation, route }) => {
                   },
                 ]}
               >
-                <View style={[styles.formContent, isSmallScreen && styles.formContentSmall, isTablet && styles.formContentTablet]}>
-                  <Text style={[styles.headerTitle, isSmallScreen && styles.headerTitleSmall, isTablet && styles.headerTitleTablet]}>Create Account</Text>
-                  <Text style={[styles.headerSubtitle, isSmallScreen && styles.headerSubtitleSmall, isTablet && styles.headerSubtitleTablet]}>Start your journey with us today</Text>
-                  {/* Inputs */}
-                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                    <Ionicons name="person-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                    <TextInput style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} placeholder="Full Name" placeholderTextColor="#888" value={fullName} onChangeText={setFullName} />
-                  </View>
-                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                    <Ionicons name="mail-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                    <TextInput style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} placeholder="Email Address" placeholderTextColor="#888" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-                  </View>
-                  <TouchableOpacity onPress={() => navigation.navigate('LocationSelection')} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                    <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                    <Text style={[styles.input, styles.locationText, !location && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{location || 'Select Your Location'}</Text>
-                    <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
-                  </TouchableOpacity>
-                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                    <Ionicons name="lock-closed-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                    <TextInput style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} placeholder="Password" placeholderTextColor="#888" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" />
+                <View
+                  style={[
+                    styles.formContent,
+                    isSmallScreen && styles.formContentSmall,
+                    isTablet && styles.formContentTablet,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.headerTitle,
+                      isSmallScreen && styles.headerTitleSmall,
+                      isTablet && styles.headerTitleTablet,
+                    ]}
+                  >
+                    Create Account
+                  </Text>
+                  <Text
+                    style={[
+                      styles.headerSubtitle,
+                      isSmallScreen && styles.headerSubtitleSmall,
+                      isTablet && styles.headerSubtitleTablet,
+                    ]}
+                  >
+                    Start your journey with us today
+                  </Text>
+
+                  {/* User Type Selection */}
+                  <View style={styles.userTypeContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.userTypeButton,
+                        userType === "citizen" && styles.userTypeButtonActive,
+                      ]}
+                      onPress={() => setUserType("citizen")}
+                    >
+                      <Ionicons
+                        name="person"
+                        size={isTablet ? 24 : 20}
+                        color={userType === "citizen" ? "#fff" : "#11998e"}
+                      />
+                      <Text
+                        style={[
+                          styles.userTypeText,
+                          userType === "citizen" && styles.userTypeTextActive,
+                        ]}
+                      >
+                        Citizen
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.userTypeButton,
+                        userType === "company" && styles.userTypeButtonActive,
+                      ]}
+                      onPress={() => setUserType("company")}
+                    >
+                      <Ionicons
+                        name="business"
+                        size={isTablet ? 24 : 20}
+                        color={userType === "company" ? "#fff" : "#11998e"}
+                      />
+                      <Text
+                        style={[
+                          styles.userTypeText,
+                          userType === "company" && styles.userTypeTextActive,
+                        ]}
+                      >
+                        Company
+                      </Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                    <Ionicons name="lock-closed-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                    <TextInput style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} placeholder="Confirm Password" placeholderTextColor="#888" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword} />
-                    <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeButton}>
-                      <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" />
+
+                  {/* Inputs */}
+                  {userType === "citizen" ? (
+                    <View
+                      style={[
+                        styles.inputContainer,
+                        isSmallScreen && styles.inputContainerSmall,
+                        isTablet && styles.inputContainerTablet,
+                      ]}
+                    >
+                      <Ionicons
+                        name="person-outline"
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[
+                          styles.input,
+                          isSmallScreen && styles.inputSmall,
+                          isTablet && styles.inputTablet,
+                        ]}
+                        placeholder="Full Name"
+                        placeholderTextColor="#888"
+                        value={fullName}
+                        onChangeText={setFullName}
+                      />
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.inputContainer,
+                        isSmallScreen && styles.inputContainerSmall,
+                        isTablet && styles.inputContainerTablet,
+                      ]}
+                    >
+                      <Ionicons
+                        name="business-outline"
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
+                        style={[
+                          styles.input,
+                          isSmallScreen && styles.inputSmall,
+                          isTablet && styles.inputTablet,
+                        ]}
+                        placeholder="Company Name"
+                        placeholderTextColor="#888"
+                        value={companyName}
+                        onChangeText={setCompanyName}
+                      />
+                    </View>
+                  )}
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      isSmallScreen && styles.inputContainerSmall,
+                      isTablet && styles.inputContainerTablet,
+                    ]}
+                  >
+                    <Ionicons
+                      name="mail-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        isSmallScreen && styles.inputSmall,
+                        isTablet && styles.inputTablet,
+                      ]}
+                      placeholder="Email Address"
+                      placeholderTextColor="#888"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
+                  </View>
+
+                  {/* Phone Number Field */}
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      isSmallScreen && styles.inputContainerSmall,
+                      isTablet && styles.inputContainerTablet,
+                    ]}
+                  >
+                    <Ionicons
+                      name="call-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        isSmallScreen && styles.inputSmall,
+                        isTablet && styles.inputTablet,
+                      ]}
+                      placeholder="Phone Number"
+                      placeholderTextColor="#888"
+                      value={phoneNumber}
+                      onChangeText={setPhoneNumber}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+
+                  {/* Location/Address Fields */}
+                  {userType === "citizen" ? (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate("LocationSelection")}
+                      style={[
+                        styles.inputContainer,
+                        isSmallScreen && styles.inputContainerSmall,
+                        isTablet && styles.inputContainerTablet,
+                      ]}
+                    >
+                      <Ionicons
+                        name="location-outline"
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
+                        style={styles.inputIcon}
+                      />
+                      <Text
+                        style={[
+                          styles.input,
+                          styles.locationText,
+                          !location && styles.placeholderText,
+                          isSmallScreen && styles.inputSmall,
+                          isTablet && styles.inputTablet,
+                        ]}
+                      >
+                        {location || "Select Your Location"}
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={isTablet ? 28 : 22}
+                        color="#11998e"
+                      />
+                    </TouchableOpacity>
+                  ) : (
+                    <>
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isSmallScreen && styles.inputContainerSmall,
+                          isTablet && styles.inputContainerTablet,
+                        ]}
+                      >
+                        <Ionicons
+                          name="location-outline"
+                          size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                          color="#11998e"
+                          style={styles.inputIcon}
+                        />
+                        <TextInput
+                          style={[
+                            styles.input,
+                            isSmallScreen && styles.inputSmall,
+                            isTablet && styles.inputTablet,
+                          ]}
+                          placeholder="Company Address"
+                          placeholderTextColor="#888"
+                          value={companyAddress}
+                          onChangeText={setCompanyAddress}
+                        />
+                      </View>
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isSmallScreen && styles.inputContainerSmall,
+                          isTablet && styles.inputContainerTablet,
+                        ]}
+                      >
+                        <Ionicons
+                          name="person-outline"
+                          size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                          color="#11998e"
+                          style={styles.inputIcon}
+                        />
+                        <TextInput
+                          style={[
+                            styles.input,
+                            isSmallScreen && styles.inputSmall,
+                            isTablet && styles.inputTablet,
+                          ]}
+                          placeholder="Contact Person Name"
+                          placeholderTextColor="#888"
+                          value={companyContact}
+                          onChangeText={setCompanyContact}
+                        />
+                      </View>
+                    </>
+                  )}
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      isSmallScreen && styles.inputContainerSmall,
+                      isTablet && styles.inputContainerTablet,
+                    ]}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        isSmallScreen && styles.inputSmall,
+                        isTablet && styles.inputTablet,
+                      ]}
+                      placeholder="Password"
+                      placeholderTextColor="#888"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeButton}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      isSmallScreen && styles.inputContainerSmall,
+                      isTablet && styles.inputContainerTablet,
+                    ]}
+                  >
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                      color="#11998e"
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      style={[
+                        styles.input,
+                        isSmallScreen && styles.inputSmall,
+                        isTablet && styles.inputTablet,
+                      ]}
+                      placeholder="Confirm Password"
+                      placeholderTextColor="#888"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry={!showConfirmPassword}
+                    />
+                    <TouchableOpacity
+                      onPress={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      style={styles.eyeButton}
+                    >
+                      <Ionicons
+                        name={
+                          showConfirmPassword
+                            ? "eye-off-outline"
+                            : "eye-outline"
+                        }
+                        size={isTablet ? 28 : isSmallScreen ? 20 : 22}
+                        color="#11998e"
+                      />
                     </TouchableOpacity>
                   </View>
                   {/* Sign Up Button */}
-                  <TouchableOpacity onPress={handleRegister} style={[styles.signInButton, isSmallScreen && styles.signInButtonSmall, isTablet && styles.signInButtonTablet]} disabled={isLoading} activeOpacity={0.85}>
-                    <LinearGradient colors={['#43e97b', '#11998e']} style={[styles.signInGradient, isSmallScreen && styles.signInGradientSmall, isTablet && styles.signInGradientTablet]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                      {isLoading ? <ActivityIndicator color="#fff" /> : (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={[styles.signInButtonText, isSmallScreen && styles.signInButtonTextSmall, isTablet && styles.signInButtonTextTablet]}>Sign Up</Text>
-                          <Ionicons name="arrow-forward-circle" size={isTablet ? 28 : 22} color="#fff" style={{ marginLeft: 8 }} />
+                  <TouchableOpacity
+                    onPress={handleRegister}
+                    style={[
+                      styles.signInButton,
+                      isSmallScreen && styles.signInButtonSmall,
+                      isTablet && styles.signInButtonTablet,
+                    ]}
+                    disabled={isLoading}
+                    activeOpacity={0.85}
+                  >
+                    <LinearGradient
+                      colors={["#43e97b", "#11998e"]}
+                      style={[
+                        styles.signInGradient,
+                        isSmallScreen && styles.signInGradientSmall,
+                        isTablet && styles.signInGradientTablet,
+                      ]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.signInButtonText,
+                              isSmallScreen && styles.signInButtonTextSmall,
+                              isTablet && styles.signInButtonTextTablet,
+                            ]}
+                          >
+                            Sign Up
+                          </Text>
+                          <Ionicons
+                            name="arrow-forward-circle"
+                            size={isTablet ? 28 : 22}
+                            color="#fff"
+                            style={{ marginLeft: 8 }}
+                          />
                         </View>
                       )}
                     </LinearGradient>
@@ -180,16 +631,34 @@ const RegisterScreen = ({ navigation, route }) => {
                   {/* Divider */}
                   <View style={styles.dividerContainer}>
                     <View style={styles.divider} />
-                    
+
                     <View style={styles.divider} />
                   </View>
-                 
-                  
+
                   {/* Sign In Link */}
                   <View style={styles.signInContainer}>
-                    <Text style={[styles.signInText, isSmallScreen && styles.signInTextSmall, isTablet && styles.signInTextTablet]}>Already have an account?{' '}</Text>
-                    <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => navigation.navigate('Login')}>
-                      <Text style={[styles.signInLink, isSmallScreen && styles.signInLinkSmall, isTablet && styles.signInLinkTablet]}>Sign In</Text>
+                    <Text
+                      style={[
+                        styles.signInText,
+                        isSmallScreen && styles.signInTextSmall,
+                        isTablet && styles.signInTextTablet,
+                      ]}
+                    >
+                      Already have an account?{" "}
+                    </Text>
+                    <TouchableOpacity
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      onPress={() => navigation.navigate("Login")}
+                    >
+                      <Text
+                        style={[
+                          styles.signInLink,
+                          isSmallScreen && styles.signInLinkSmall,
+                          isTablet && styles.signInLinkTablet,
+                        ]}
+                      >
+                        Sign In
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -215,16 +684,16 @@ const styles = StyleSheet.create({
   },
   centerWrapper: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   centerWrapperTablet: {
     minHeight: height * 0.9,
   },
   scrollViewContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 20,
   },
@@ -236,10 +705,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   formContainer: {
-    width: '90%',
+    width: "90%",
     maxWidth: 600,
     minWidth: 320,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginVertical: 32,
   },
   formContainerLandscape: {
@@ -253,13 +722,13 @@ const styles = StyleSheet.create({
     minWidth: 400,
   },
   formContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 36,
     paddingHorizontal: 32,
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
-    shadowColor: '#000',
+    borderColor: "#e0e0e0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.13,
     shadowRadius: 24,
@@ -276,10 +745,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 6,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerTitleSmall: {
     fontSize: 22,
@@ -290,11 +759,11 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 15,
-    color: '#11998e',
-    textAlign: 'center',
+    color: "#11998e",
+    textAlign: "center",
     paddingHorizontal: 20,
     lineHeight: 20,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 18,
   },
   headerSubtitleSmall: {
@@ -306,16 +775,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 20,
     paddingHorizontal: 12,
     borderWidth: 1.2,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     height: 48,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -337,7 +806,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#222',
+    color: "#222",
     fontSize: 15,
   },
   inputSmall: {
@@ -348,10 +817,10 @@ const styles = StyleSheet.create({
   },
   locationText: {
     paddingVertical: 12,
-    color: '#222',
+    color: "#222",
   },
   placeholderText: {
-    color: '#888',
+    color: "#888",
   },
   eyeButton: {
     padding: 6,
@@ -359,9 +828,9 @@ const styles = StyleSheet.create({
   },
   signInButton: {
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 24,
-    shadowColor: '#11998e',
+    shadowColor: "#11998e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 8,
@@ -376,9 +845,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   signInGradient: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderRadius: 24,
@@ -394,9 +863,9 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   signInButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 1,
   },
   signInButtonTextSmall: {
@@ -406,20 +875,20 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 18,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
   },
   dividerText: {
-    color: '#888',
+    color: "#888",
     marginHorizontal: 12,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   dividerTextSmall: {
     fontSize: 12,
@@ -430,8 +899,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 18,
   },
   socialLoginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 18,
     gap: 12,
   },
@@ -446,12 +915,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    shadowColor: '#000',
+    borderColor: "#e0e0e0",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 2,
@@ -468,13 +937,13 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   signInContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 2,
   },
   signInText: {
-    color: '#888',
+    color: "#888",
     fontSize: 13,
   },
   signInTextSmall: {
@@ -484,9 +953,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   signInLink: {
-    color: '#2563eb',
+    color: "#2563eb",
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     marginLeft: 2,
   },
   signInLinkSmall: {
@@ -496,26 +965,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   attractHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 18,
     marginTop: 10,
     paddingHorizontal: 10,
   },
   attractTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 6,
     letterSpacing: 1.2,
   },
   attractSubtitle: {
-    color: '#e0f2f1',
+    color: "#e0f2f1",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 2,
-    fontWeight: '500',
+    fontWeight: "500",
     lineHeight: 22,
+  },
+  userTypeContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    gap: 12,
+  },
+  userTypeButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#11998e",
+    backgroundColor: "#fff",
+  },
+  userTypeButtonActive: {
+    backgroundColor: "#11998e",
+  },
+  userTypeText: {
+    marginLeft: 8,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#11998e",
+  },
+  userTypeTextActive: {
+    color: "#fff",
   },
 });
 

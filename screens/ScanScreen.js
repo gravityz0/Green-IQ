@@ -18,7 +18,7 @@ const wasteControlTips = [
 
 const ScanScreen = () => {
   const navigation = useNavigation();
-  const [photos, setPhotos] = useState([]); // Array of photo objects
+  const [photos, setPhotos] = useState([]); 
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -28,7 +28,6 @@ const ScanScreen = () => {
   const [showFallback, setShowFallback] = useState(false);
   const [fallbackFact, setFallbackFact] = useState('');
 
-  // Server configuration
   const SERVER_URL = 'http://192.168.0.105:10000';
   const SERVER_URL_1 = 'https://waste-classifier-modal-6.onrender.com';
 
@@ -40,7 +39,6 @@ const ScanScreen = () => {
     'Composting food waste reduces methane emissions from landfills.'
   ];
 
-  // Enhanced image picker with better validation
   const handlePickImage = async () => {
     if (photos.length >= 4) {
       Alert.alert('Limit reached', 'You can only select up to 4 images.');
@@ -58,10 +56,10 @@ const ScanScreen = () => {
       
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: false, // Single selection for better reliability
+        allowsMultipleSelection: false, 
         quality: 0.8,
         allowsEditing: false,
-        exif: false, // Disable EXIF data to reduce size
+        exif: false, 
       });
       
       setIsProcessing(false);
@@ -77,13 +75,11 @@ const ScanScreen = () => {
           type: asset.type
         });
         
-        // Validate the image
         if (!asset.uri) {
           Alert.alert('Error', 'Invalid image selected');
           return;
         }
         
-        // Check if URI is valid
         if (!asset.uri.startsWith('file://') && !asset.uri.startsWith('content://')) {
           Alert.alert('Error', 'Invalid image URI format');
           return;
@@ -96,11 +92,9 @@ const ScanScreen = () => {
         };
         
         setPhotos(prev => [...prev, photoObj]);
-        console.log('Photo added successfully:', photoObj);
       }
     } catch (e) {
       setIsProcessing(false);
-      console.error('ImagePicker error:', e);
       Alert.alert('Error', `Image picker failed: ${e.message}`);
     }
   };
@@ -113,7 +107,6 @@ const ScanScreen = () => {
     setConfirmed(true);
   };
 
-  // Enhanced upload function with better error handling
   const handleUpload = async () => {
     if (photos.length === 0) {
       Alert.alert('No Images', 'Please select at least one image to upload.');
@@ -125,53 +118,37 @@ const ScanScreen = () => {
     
     try {
       const photo = photos[0];
-      console.log('Preparing to upload photo:', photo);
       
-      // Create FormData
       const formData = new FormData();
       formData.append('image', {
         uri: photo.uri,
-        type: 'image/jpeg', // Force JPEG type for consistency
-        name: 'image.jpg', // Simple name
+        type: 'image/jpeg', 
+        name: 'image.jpg', 
       });
-
-      console.log('FormData created, sending request...');
-
-      // Use fetch instead of axios for better React Native compatibility
       const response = await Promise.race([
         fetch(`${SERVER_URL}/predict`, {
           method: 'POST',
           body: formData,
           headers: {
             'Accept': 'application/json',
-            // Don't set Content-Type, let the browser set it with boundary
           },
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 30000)
+          setTimeout(() => reject(new Error('Request timeout')), 90000)
         )
       ]);
 
-      console.log('Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server error response:', errorText);
         throw new Error(`Server error (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Classification result:', data);
 
       setUploading(false);
       setUploadProgress(100);
       
       if (data && data.success !== false && (data.prediction || data.label)) {
-        // Convert response to expected format for modal
         const result = {
           label: data.prediction || data.label,
           confidence: parseFloat(data.confidence || 0),
@@ -189,13 +166,10 @@ const ScanScreen = () => {
         };
         navigation.navigate('ClassificationResult', { result });
       } else {
-        // Fallback to offline mode
-        console.log('No valid prediction, showing fallback');
         setFallbackFact(ecoFacts[Math.floor(Math.random() * ecoFacts.length)]);
         setShowFallback(true);
       }
     } catch (error) {
-      console.error('Upload error details:', error);
       setUploading(false);
       setUploadProgress(0);
       
@@ -249,7 +223,6 @@ const ScanScreen = () => {
     setFallbackFact('');
   };
 
-  // Fallback screen
   if (showFallback) {
     const fallbackLabels = [
       {
@@ -293,14 +266,12 @@ const ScanScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top Navigation Bar */}
       <View style={styles.topNavBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton} accessibilityLabel="Go back">
           <Ionicons name="arrow-back" size={28} color="#2d6a4f" />
         </TouchableOpacity>
         <Text style={styles.topNavTitle}>Scan Waste</Text>
       </View>
-      {/* Gallery of selected photos */}
       {photos.length > 0 && (
         <View style={styles.galleryContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -320,7 +291,6 @@ const ScanScreen = () => {
         </View>
       )}
       
-      {/* Pick image button */}
       {!confirmed && (
         <TouchableOpacity
           style={styles.captureButton}
@@ -336,7 +306,6 @@ const ScanScreen = () => {
         </TouchableOpacity>
       )}
       
-      {/* Confirm button */}
       {photos.length > 0 && !confirmed && (
         <TouchableOpacity 
           style={styles.confirmButton} 
@@ -347,8 +316,7 @@ const ScanScreen = () => {
           <Text style={styles.buttonText}>Confirm ({photos.length})</Text>
         </TouchableOpacity>
       )}
-      
-      {/* Upload section */}
+
       {confirmed && (
         <View style={styles.uploadContainer}>
           <TouchableOpacity 
@@ -389,7 +357,6 @@ const ScanScreen = () => {
         </View>
       )}
 
-      {/* Show classification results on screen */}
       {classificationResults.length > 0 && (
         <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
           <View style={{
@@ -423,7 +390,6 @@ const ScanScreen = () => {
             }}>
               {classificationResults[0].label.replace('_', ' ')}
             </Text>
-            {/* Confidence as a circular progress (simple text for now) */}
             <Text style={{ fontSize: 18, color: '#333', marginBottom: 6, fontWeight: '600' }}>
               Confidence: {Math.round((classificationResults[0].confidence || 0) * 100)}%
             </Text>
@@ -467,7 +433,6 @@ const ScanScreen = () => {
         </ScrollView>
       )}
 
-      {/* Waste Classification Modal */}
       <WasteClassificationModal
         visible={showModal}
         results={classificationResults}
