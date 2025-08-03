@@ -29,6 +29,7 @@ const RegisterScreen = ({ navigation, route }) => {
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('+250');
+  const [referralCode, setReferralCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [location, setLocation] = useState('');
@@ -106,7 +107,8 @@ const RegisterScreen = ({ navigation, route }) => {
           companyAddress,
           companyContact,
           wasteTypes
-        })
+        }),
+        ...(userType === 'citizen' && referralCode && { referralCode })
       };
 
       const response = await axios.post('https://trash2treasure-backend.onrender.com/register', userData);
@@ -224,6 +226,21 @@ const RegisterScreen = ({ navigation, route }) => {
                       keyboardType="phone-pad"
                     />
                   </View>
+
+                  {/* Referral Code Field (Citizens Only) */}
+                  {userType === 'citizen' && (
+                    <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                      <Ionicons name="gift-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
+                      <TextInput 
+                        style={[styles.input, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]} 
+                        placeholder="Referral Code (Optional)" 
+                        placeholderTextColor="#888" 
+                        value={referralCode} 
+                        onChangeText={setReferralCode} 
+                        autoCapitalize="characters"
+                      />
+                    </View>
+                  )}
 
                   {/* Location/Address Fields */}
                   {userType === 'citizen' ? (
