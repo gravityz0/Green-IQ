@@ -105,7 +105,7 @@ const RegisterScreen = ({ navigation, route }) => {
             email,
             fullNames: fullName,
             password,
-            userAddress,
+            userAddress: location,
             phoneNumber,
             userType,
             referralUsed: referralCode,
@@ -118,16 +118,17 @@ const RegisterScreen = ({ navigation, route }) => {
         });
         setTimeout(() => navigation.navigate("Login"), 1500);
       } else {
+        console.log(companyLocation)
         const response = await axios.post(
           "https://trash2treasure-backend.onrender.com/registerCompany",
           {
             companyName,
             email,
             phoneNumber,
-            companyAddress,
+            companyAddress: companyLocation,
             contactPersonalName: companyContact,
             password,
-            wasteType: wasteTypes,
+            wasteTypeHandled: wasteTypes,
           }
         );
         Toast.show({
@@ -138,6 +139,7 @@ const RegisterScreen = ({ navigation, route }) => {
         setTimeout(() => navigation.navigate("Login"), 1500);
       }        
     } catch (error) {
+      console.log(error)
       Toast.show({
         type: 'error',
         text1: 'Registration failed',
