@@ -98,30 +98,45 @@ const RegisterScreen = ({ navigation, route }) => {
 
     setIsLoading(true);
     try {
-      const userData = {
-        userType,
-        email,
-        password,
-        phoneNumber,
-        ...(userType === 'citizen' ? {
-          fullNames: fullName,
-          userAddress: location
-        } : {
-          companyName,
-          companyAddress: companyLocation,
-          companyContact,
-          wasteTypes
-        }),
-        ...(userType === 'citizen' && referralCode && { referralCode })
-      };
-
-      const response = await axios.post('https://trash2treasure-backend.onrender.com/register', userData);
-      Toast.show({
-        type: 'success',
-        text1: 'Account Created',
-        text2: userType === 'citizen' ? 'Check your email to verify your account' : 'Company account created successfully'
-      });
-      setTimeout(() => navigation.navigate('Login'), 1500);
+      if (userType === "citizen") {
+        const response = await axios.post(
+          "https://trash2treasure-backend.onrender.com/register",
+          {
+            email,
+            fullNames: fullName,
+            password,
+            userAddress,
+            phoneNumber,
+            userType,
+            referralUsed: referralCode,
+          }
+        );
+        Toast.show({
+          type: "success",
+          text1: "Account Created",
+          text2: "Check your email to verify your account"
+        });
+        setTimeout(() => navigation.navigate("Login"), 1500);
+      } else {
+        const response = await axios.post(
+          "https://trash2treasure-backend.onrender.com/registerCompany",
+          {
+            companyName,
+            email,
+            phoneNumber,
+            companyAddress,
+            contactPersonalName: companyContact,
+            password,
+            wasteType: wasteTypes,
+          }
+        );
+        Toast.show({
+          type: "success",
+          text1: "Account Created",
+          text2: "Company account created successfully",
+        });
+        setTimeout(() => navigation.navigate("Login"), 1500);
+      }        
     } catch (error) {
       Toast.show({
         type: 'error',
