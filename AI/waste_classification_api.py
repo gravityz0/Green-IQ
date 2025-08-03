@@ -1,6 +1,7 @@
 import os
 import gc
 import json
+import requests
 from datetime import datetime
 from PIL import Image
 import torch
@@ -25,24 +26,24 @@ transform = transforms.Compose([
 # Label mapping
 id2label = model.config.id2label
 
-app = Flask(__name__)
+# Backend URL configuration
+BACKEND_URL = os.environ.get("BACKEND_URL", "https://trash2treasure-backend.onrender.com/wasteSubmission")
 
-# In-memory storage for waste reports (replace with database in production)
-waste_reports = []
+app = Flask(__name__)
 
 # ROOT ROUTE - Test if server is working
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "Flask server is running successfully!",
+        "message": "Waste Classification API is running successfully!",
         "server_info": {
             "device": str(device),
             "model_loaded": model is not None,
+            "backend_url": BACKEND_URL,
             "routes_available": [
                 "GET  / - This route (server status)",
                 "GET  /health - Health check",
-                "POST /predict - Image classification",
-                "POST /api/waste-report - Report waste with location (NEW)"
+                "POST /predict - Image classification and send to backend"
             ]
         }
     })
@@ -54,11 +55,12 @@ def health_check():
         "status": "healthy",
         "device": str(device),
         "model_loaded": model is not None,
+        "backend_url": BACKEND_URL,
         "message": "Server is running successfully",
-        "version": "1.0"
+        "version": "2.0"
     })
 
-# PREDICTION ROUTE
+# PREDICTION ROUTE - Classify image and send to backend
 @app.route("/predict", methods=["POST"])
 def predict_image():
     print("Received request to /predict")
@@ -87,11 +89,42 @@ def predict_image():
         
         print(f"Prediction: {result}, Confidence: {confidence:.4f}")
         
+        # Prepare data to send to backend
+        classification_data = {
+            "prediction": result,
+            "confidence": f"{confidence:.4f}",
+            "timestamp": datetime.now().isoformat(),
+            "image_filename": file.filename,
+            "model_version": "Claudineuwa/waste_classifier_Isaac",
+            "device": str(device)
+        }
+        
+        # Send data to backend
+        try:
+            backend_response = requests.post(
+                f"{BACKEND_URL}/waste-classification",
+                json=classification_data,
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
+            
+            if backend_response.status_code == 200:
+                print("Data successfully sent to backend")
+                backend_result = backend_response.json()
+            else:
+                print(f"Backend returned status {backend_response.status_code}")
+                backend_result = {"backend_status": "error", "message": "Failed to send to backend"}
+                
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending to backend: {str(e)}")
+            backend_result = {"backend_status": "error", "message": f"Backend connection failed: {str(e)}"}
+        
         return jsonify({
             "prediction": result,
             "confidence": f"{confidence:.4f}",
             "success": True,
-            "message": "Classification successful"
+            "message": "Classification successful",
+            "backend_response": backend_result
         })
 
     except Exception as e:
@@ -110,163 +143,6 @@ def predict_image():
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-# NEW ROUTE: WASTE REPORT ENDPOINT FOR REACT NATIVE APP
-@app.route("/api/waste-report", methods=["POST"])
-def waste_report():
-    """
-    Handle waste reporting from React Native app with GPS location
-    Expected JSON format:
-    {
-        "waste_type": "non-recyclable",
-        "location": {
-            "latitude": 1.93844,
-            "longitude": 30.05632
-        }
-    }
-    """
-    print("Received waste report from mobile app")
-    
-    try:
-        # Check if request contains JSON data
-        if not request.is_json:
-            print("Request is not JSON")
-            return jsonify({
-                "error": "Request must be JSON",
-                "success": False,
-                "message": "Content-Type must be application/json"
-            }), 400
-        
-        data = request.get_json()
-        print(f"Received data: {data}")
-        
-        # Validate required fields
-        if not data:
-            print("No JSON data received")
-            return jsonify({
-                "error": "No data received",
-                "success": False,
-                "message": "Request body is empty"
-            }), 400
-        
-        # Check for required waste_type field
-        if "waste_type" not in data or not data["waste_type"]:
-            print("Missing waste_type field")
-            return jsonify({
-                "error": "Missing waste_type field",
-                "success": False,
-                "message": "waste_type is required"
-            }), 400
-        
-        # Check for required location field
-        if "location" not in data or not data["location"]:
-            print("Missing location field")
-            return jsonify({
-                "error": "Missing location field", 
-                "success": False,
-                "message": "location object is required"
-            }), 400
-        
-        location = data["location"]
-        
-        # Validate location has latitude and longitude
-        if "latitude" not in location or "longitude" not in location:
-            print("Missing latitude or longitude in location")
-            return jsonify({
-                "error": "Invalid location format",
-                "success": False,
-                "message": "Location must contain latitude and longitude"
-            }), 400
-        
-        # Validate latitude and longitude are numbers
-        try:
-            lat = float(location["latitude"])
-            lng = float(location["longitude"])
-        except (ValueError, TypeError):
-            print("Invalid latitude or longitude values")
-            return jsonify({
-                "error": "Invalid coordinates",
-                "success": False,
-                "message": "Latitude and longitude must be valid numbers"
-            }), 400
-        
-        # Validate latitude and longitude ranges
-        if not (-90 <= lat <= 90):
-            print(f"Invalid latitude: {lat}")
-            return jsonify({
-                "error": "Invalid latitude",
-                "success": False,
-                "message": "Latitude must be between -90 and 90"
-            }), 400
-        
-        if not (-180 <= lng <= 180):
-            print(f"Invalid longitude: {lng}")
-            return jsonify({
-                "error": "Invalid longitude",
-                "success": False,
-                "message": "Longitude must be between -180 and 180"
-            }), 400
-        
-        # Create waste report record
-        waste_report = {
-            "id": len(waste_reports) + 1,
-            "waste_type": data["waste_type"].strip(),
-            "location": {
-                "latitude": lat,
-                "longitude": lng
-            },
-            "timestamp": datetime.now().isoformat(),
-            "reported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "source": "mobile_app"
-        }
-        
-        # Store the report (replace with database save in production)
-        waste_reports.append(waste_report)
-        
-        print(f"Waste report saved successfully!")
-        print(f"   ID: {waste_report['id']}")
-        print(f"   Type: {waste_report['waste_type']}")
-        print(f"   Location: ({lat:.6f}, {lng:.6f})")
-        print(f"   Timestamp: {waste_report['reported_at']}")
-        print(f"Total reports in database: {len(waste_reports)}")
-        
-        # Return success response to mobile app
-        return jsonify({
-            "success": True,
-            "message": "Waste report saved successfully",
-            "report_id": waste_report["id"],
-            "data": {
-                "waste_type": waste_report["waste_type"],
-                "location": waste_report["location"],
-                "timestamp": waste_report["timestamp"]
-            }
-        }), 200
-        
-    except Exception as e:
-        print(f"Error in waste reporting: {str(e)}")
-        return jsonify({
-            "error": "Internal server error",
-            "success": False,
-            "message": f"Failed to save waste report: {str(e)}"
-        }), 500
-
-# OPTIONAL: Get all waste reports (for debugging/monitoring)
-@app.route("/api/waste-reports", methods=["GET"])
-def get_waste_reports():
-    """Get all waste reports - useful for debugging"""
-    try:
-        print(f"Returning {len(waste_reports)} waste reports")
-        return jsonify({
-            "success": True,
-            "total_reports": len(waste_reports),
-            "reports": waste_reports
-        }), 200
-    except Exception as e:
-        print(f"Error getting waste reports: {str(e)}")
-        return jsonify({
-            "error": "Failed to get reports",
-            "success": False
-        }), 500
-
 # ERROR HANDLERS
 @app.errorhandler(404)
 def not_found(error):
@@ -275,9 +151,7 @@ def not_found(error):
         "available_routes": [
             "GET  /",
             "GET  /health", 
-            "POST /predict",
-            "POST /api/waste-report",
-            "GET  /api/waste-reports"
+            "POST /predict"
         ]
     }), 404
 
@@ -300,19 +174,18 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     
     print("=" * 50)
-    print(" Starting Waste Classification Server")
+    print(" Starting Waste Classification API")
     print("=" * 50)
     print(f"Server URL: http://0.0.0.0:{port}")
     print(f"External URL: http://192.168.0.109:{port}")
-    print(f" Device: {device}")
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"Device: {device}")
     print(f"Model loaded: {model is not None}")
     print("\nAvailable Routes:")
     print(f"• GET  http://192.168.0.109:{port}/")
     print(f"• GET  http://192.168.0.109:{port}/health")
     print(f"• POST http://192.168.0.109:{port}/predict")
-    print(f"• POST http://192.168.0.109:{port}/api/waste-report (NEW)")
-    print(f"• GET  http://192.168.0.109:{port}/api/waste-reports")
-    print("\nReady to receive data from React Native app!")
+    print("\nReady to classify images and send data to backend!")
     print("=" * 50)
     
     app.run(host="0.0.0.0", port=port, debug=True)

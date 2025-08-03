@@ -20,23 +20,25 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
 const RegisterScreen = ({ navigation, route }) => {
-  const [userType, setUserType] = useState('citizen'); // 'citizen' or 'company'
-  const [fullName, setFullName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('+250');
-  const [referralCode, setReferralCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [location, setLocation] = useState('');
-  const [companyLocation, setCompanyLocation] = useState('');
-  const [companyContact, setCompanyContact] = useState('');
-  const [wasteTypes, setWasteTypes] = useState([]);
-  const [selectedWasteType, setSelectedWasteType] = useState('');
+  // Initialize state with route params if they exist
+  const [userType, setUserType] = useState(route?.params?.userType || 'citizen');
+  const [fullName, setFullName] = useState(route?.params?.fullName || '');
+  const [companyName, setCompanyName] = useState(route?.params?.companyName || '');
+  const [email, setEmail] = useState(route?.params?.email || '');
+  const [phoneNumber, setPhoneNumber] = useState(route?.params?.phoneNumber || '+250');
+  const [referralCode, setReferralCode] = useState(route?.params?.referralCode || '');
+  const [password, setPassword] = useState(route?.params?.password || '');
+  const [confirmPassword, setConfirmPassword] = useState(route?.params?.confirmPassword || '');
+  const [location, setLocation] = useState(route?.params?.location || '');
+  const [companyLocation, setCompanyLocation] = useState(route?.params?.companyLocation || '');
+  const [companyContact, setCompanyContact] = useState(route?.params?.companyContact || '');
+  const [wasteTypes, setWasteTypes] = useState(route?.params?.wasteTypes || []);
+  const [selectedWasteType, setSelectedWasteType] = useState(route?.params?.selectedWasteType || '');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,20 +58,103 @@ const RegisterScreen = ({ navigation, route }) => {
     }).start();
   }, []);
 
+  // Handle location selection from LocationSelectionScreen
   useEffect(() => {
     if (route?.params?.selectedLocation) {
       if (userType === 'citizen') {
+        // For citizens: selectedLocation is just a string (location name)
         setLocation(route.params.selectedLocation);
       } else {
+        // For companies: selectedLocation is a JSON object with coordinates and details
         setCompanyLocation(route.params.selectedLocation);
       }
     }
   }, [route?.params?.selectedLocation, userType]);
 
+  // Handle form state restoration from route params
+  useEffect(() => {
+    if (route?.params) {
+      const params = route.params;
+      if (params.userType) setUserType(params.userType);
+      if (params.fullName) setFullName(params.fullName);
+      if (params.companyName) setCompanyName(params.companyName);
+      if (params.email) setEmail(params.email);
+      if (params.phoneNumber) setPhoneNumber(params.phoneNumber);
+      if (params.referralCode) setReferralCode(params.referralCode);
+      if (params.password) setPassword(params.password);
+      if (params.confirmPassword) setConfirmPassword(params.confirmPassword);
+      if (params.location) setLocation(params.location);
+      if (params.companyLocation) setCompanyLocation(params.companyLocation);
+      if (params.companyContact) setCompanyContact(params.companyContact);
+      if (params.wasteTypes) setWasteTypes(params.wasteTypes);
+      if (params.selectedWasteType) setSelectedWasteType(params.selectedWasteType);
+    }
+  }, [route?.params]);
+
+  // Use focus effect to restore form state when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route?.params) {
+        const params = route.params;
+        if (params.userType) setUserType(params.userType);
+        if (params.fullName) setFullName(params.fullName);
+        if (params.companyName) setCompanyName(params.companyName);
+        if (params.email) setEmail(params.email);
+        if (params.phoneNumber) setPhoneNumber(params.phoneNumber);
+        if (params.referralCode) setReferralCode(params.referralCode);
+        if (params.password) setPassword(params.password);
+        if (params.confirmPassword) setConfirmPassword(params.confirmPassword);
+        if (params.location) setLocation(params.location);
+        if (params.companyLocation) setCompanyLocation(params.companyLocation);
+        if (params.companyContact) setCompanyContact(params.companyContact);
+        if (params.wasteTypes) setWasteTypes(params.wasteTypes);
+        if (params.selectedWasteType) setSelectedWasteType(params.selectedWasteType);
+      }
+    }, [route?.params])
+  );
+
   const validatePhoneNumber = (phone) => {
     // Basic validation for Rwandan phone numbers
     const phoneRegex = /^\+250[0-9]{8}$/;
     return phoneRegex.test(phone);
+  };
+
+  // Function to get display text for company location
+  const getCompanyLocationDisplay = () => {
+    if (!companyLocation) return 'Select Collection Point Location';
+    
+    // If companyLocation is a string (old format), return as is
+    if (typeof companyLocation === 'string') {
+      return companyLocation;
+    }
+    
+    // If companyLocation is an object (new JSON format), return formatted text
+    if (typeof companyLocation === 'object' && companyLocation.name) {
+      return `${companyLocation.name} (${companyLocation.coordinates.latitude.toFixed(4)}, ${companyLocation.coordinates.longitude.toFixed(4)})`;
+    }
+    
+    return 'Select Collection Point Location';
+  };
+
+  // Function to navigate to location selection with current form state
+  const navigateToLocationSelection = () => {
+    const currentFormState = {
+      userType,
+      fullName,
+      companyName,
+      email,
+      phoneNumber,
+      referralCode,
+      password,
+      confirmPassword,
+      location,
+      companyLocation,
+      companyContact,
+      wasteTypes,
+      selectedWasteType
+    };
+    
+    navigation.navigate('LocationSelection', currentFormState);
   };
 
   const handleRegister = async () => {
@@ -105,7 +190,7 @@ const RegisterScreen = ({ navigation, route }) => {
             email,
             fullNames: fullName,
             password,
-            userAddress,
+            userAddress: location,
             phoneNumber,
             userType,
             referralUsed: referralCode,
@@ -118,13 +203,37 @@ const RegisterScreen = ({ navigation, route }) => {
         });
         setTimeout(() => navigation.navigate("Login"), 1500);
       } else {
+        // Prepare company location data
+        let companyAddressData;
+        if (typeof companyLocation === 'object' && companyLocation.coordinates) {
+          // New JSON format with coordinates
+          companyAddressData = {
+            name: companyLocation.name,
+            district: companyLocation.district,
+            sector: companyLocation.sector,
+            coordinates: companyLocation.coordinates,
+            types: companyLocation.types,
+            hours: companyLocation.hours,
+            contact: companyLocation.contact,
+            capacity: companyLocation.capacity,
+            status: companyLocation.status,
+            description: companyLocation.description,
+            manager: companyLocation.manager
+          };
+          console.log('Sending company location with coordinates:', companyAddressData);
+        } else {
+          // Fallback for string format (backward compatibility)
+          companyAddressData = companyLocation;
+          console.log('Sending company location as string:', companyAddressData);
+        }
+
         const response = await axios.post(
           "https://trash2treasure-backend.onrender.com/registerCompany",
           {
             companyName,
             email,
             phoneNumber,
-            companyAddress,
+            companyAddress: companyAddressData,
             contactPersonalName: companyContact,
             password,
             wasteType: wasteTypes,
@@ -263,18 +372,23 @@ const RegisterScreen = ({ navigation, route }) => {
 
                   {/* Location/Address Fields */}
                   {userType === 'citizen' ? (
-                    <TouchableOpacity onPress={() => navigation.navigate('LocationSelection')} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                    <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
                       <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
                       <Text style={[styles.input, styles.locationText, !location && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{location || 'Select Your Location'}</Text>
                       <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
                     </TouchableOpacity>
                   ) : (
                     <>
-                      <TouchableOpacity onPress={() => navigation.navigate('LocationSelection')} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                        <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                        <Text style={[styles.input, styles.locationText, !companyLocation && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{companyLocation || 'Select Collection Point Location'}</Text>
-                        <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
-                      </TouchableOpacity>
+                        <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                          <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
+                          <Text style={[styles.input, styles.locationText, !companyLocation && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{getCompanyLocationDisplay()}</Text>
+                          {typeof companyLocation === 'object' && companyLocation.coordinates && (
+                            <View style={styles.coordinatesIndicator}>
+                              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                            </View>
+                          )}
+                          <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
+                        </TouchableOpacity>
                       
                       <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
                         <Ionicons name="person-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
@@ -744,6 +858,16 @@ const styles = StyleSheet.create({
   },
   wasteTypeTextActive: {
     color: '#fff',
+  },
+  coordinatesIndicator: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
   },
 });
 

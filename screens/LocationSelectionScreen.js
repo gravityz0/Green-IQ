@@ -15,8 +15,11 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 const { width } = Dimensions.get('window');
 
-const LocationSelectionScreen = ({ navigation }) => {
+const LocationSelectionScreen = ({ navigation, route }) => {
   const [selectedPoint, setSelectedPoint] = useState(null);
+
+  // Get the current form state from route params
+  const currentFormState = route?.params || {};
 
   const seoulRegion = {
     latitude: 37.5665,
@@ -27,9 +30,53 @@ const LocationSelectionScreen = ({ navigation }) => {
 
   const confirmSelection = () => {
     if (!selectedPoint) return;
+    
+    // Determine if this is for company registration
+    const isCompanyRegistration = currentFormState.userType === 'company';
+    
+    // Create location data based on user type
+    let locationData;
+    if (isCompanyRegistration) {
+      // For companies: send JSON object with coordinates and location info
+      locationData = {
+        name: selectedPoint.name,
+        district: selectedPoint.district,
+        sector: selectedPoint.sector,
+        coordinates: {
+          latitude: selectedPoint.coords.latitude,
+          longitude: selectedPoint.coords.longitude
+        },
+        types: selectedPoint.types,
+        hours: selectedPoint.hours,
+        contact: selectedPoint.contact,
+        capacity: selectedPoint.capacity,
+        status: selectedPoint.status,
+        description: selectedPoint.description,
+        manager: selectedPoint.manager
+      };
+    } else {
+      // For citizens: send just the location name (backward compatibility)
+      locationData = selectedPoint.name;
+    }
+    
+    // Return to RegisterScreen with the selected location and all previous form data
+    const updatedFormState = {
+      ...currentFormState,
+      selectedLocation: locationData
+    };
+    
     navigation.navigate({
       name: 'Register',
-      params: { selectedLocation: selectedPoint.name },
+      params: updatedFormState,
+      merge: true,
+    });
+  };
+
+  const goBack = () => {
+    // Go back with the current form state preserved
+    navigation.navigate({
+      name: 'Register',
+      params: currentFormState,
       merge: true,
     });
   };
@@ -38,10 +85,12 @@ const LocationSelectionScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Your Location</Text>
+        <Text style={styles.headerTitle}>
+          {currentFormState.userType === 'company' ? 'Select Collection Point' : 'Select Your Location'}
+        </Text>
       </View>
       <View style={styles.mapContainer}>
         <MapView
@@ -75,11 +124,26 @@ const LocationSelectionScreen = ({ navigation }) => {
           <Text style={styles.selectedLocationDetails}>
             {selectedPoint.district}, {selectedPoint.sector}
           </Text>
+          {currentFormState.userType === 'company' && (
+            <View style={styles.coordinatesContainer}>
+              <Text style={styles.coordinatesText}>
+                📍 Coordinates: {selectedPoint.coords.latitude.toFixed(6)}, {selectedPoint.coords.longitude.toFixed(6)}
+              </Text>
+              <Text style={styles.capacityText}>
+                📊 Capacity: {selectedPoint.capacity} | Status: {selectedPoint.status}
+              </Text>
+              <Text style={styles.typesText}>
+                🗂️ Types: {selectedPoint.types.join(', ')}
+              </Text>
+            </View>
+          )}
           <TouchableOpacity
             style={styles.confirmButton}
             onPress={confirmSelection}
           >
-            <Text style={styles.confirmButtonText}>Select This Location</Text>
+            <Text style={styles.confirmButtonText}>
+              {currentFormState.userType === 'company' ? 'Select This Collection Point' : 'Select This Location'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -168,6 +232,26 @@ const styles = StyleSheet.create({
     color: '#2d6a4f',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  coordinatesContainer: {
+    marginBottom: 15,
+  },
+  coordinatesText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  capacityText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  typesText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    marginTop: 5,
   },
 });
 
