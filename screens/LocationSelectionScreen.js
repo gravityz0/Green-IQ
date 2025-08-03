@@ -28,7 +28,7 @@ const LocationSelectionScreen = ({ navigation }) => {
   const confirmSelection = () => {
     if (!selectedPoint) return;
     navigation.navigate({
-      name: 'Signup',
+      name: 'Register',
       params: { selectedLocation: selectedPoint.name },
       merge: true,
     });
