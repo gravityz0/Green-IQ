@@ -249,6 +249,8 @@ const RegisterScreen = ({ navigation, route }) => {
         text1: 'Registration failed',
         text2: error?.response?.data?.message || 'Registration failed.'
       });
+
+      console.log(error?.response?.data?.message)
     } finally {
       setIsLoading(false);
     }

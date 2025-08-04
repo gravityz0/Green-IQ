@@ -28,7 +28,6 @@ const LoginScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
-
   // Animations
   const formAnim = useRef(new Animated.Value(0)).current;
   const logoAnim = useRef(new Animated.Value(0)).current;
@@ -82,6 +81,7 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
     setIsLoading(true);
+    
     try {
       const response = await axios.post('https://trash2treasure-backend.onrender.com/Login', {
         email,
@@ -89,9 +89,9 @@ const LoginScreen = ({ navigation }) => {
       });
       
       // Set user data and type
-      setUser(response.data);
-      setUserType(response.data.userRole || 'citizen');
-      navigation.navigate('Home');
+      setUser(response.data.user);
+      setUserType(response.data.user.userRole || 'citizen');
+      console.log(response.data.user)
       
       Toast.show({
         type: 'success',
@@ -101,7 +101,7 @@ const LoginScreen = ({ navigation }) => {
       });
       
       // Navigate based on user type
-      if (response.data.userRole === 'company') {
+      if (response.data.user.userRole === "company") {
         navigation.navigate('CompanyHome');
       } else {
         navigation.navigate('Home');
@@ -113,6 +113,7 @@ const LoginScreen = ({ navigation }) => {
         text2: error?.response?.data?.message || 'Invalid credentials',
         position: 'top',
       });
+      console.log(error?.response?.data?.message)
     } finally {
       setIsLoading(false);
     }

@@ -250,7 +250,7 @@ function CompanyTabs() {
         },
       })}
     >
-      <Tab.Screen name="CompanyHome" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
+      <Tab.Screen name="CompanyPortal" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
       <Tab.Screen name="CollectionMgmt" component={CollectionManagement} options={{ tabBarLabel: 'Collection' }} />
       <Tab.Screen name="Analytics" component={Dashboard} options={{ tabBarLabel: 'Analytics' }} />
       <Tab.Screen name="Employees" component={EmployeeManagement} options={{ tabBarLabel: 'Employees' }} />
