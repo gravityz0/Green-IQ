@@ -218,37 +218,42 @@ function AppTabs() {
 
 // Company portal with bottom tab bar
 function CompanyTabs() {
+  console.log('CompanyTabs component rendered');
+  
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'CompanyHome') {
-            iconName = focused ? 'business' : 'business-outline';
-          } else if (route.name === 'CollectionMgmt') {
-            iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Analytics') {
-            iconName = focused ? 'analytics' : 'analytics-outline';
-          } else if (route.name === 'Employees') {
-            iconName = focused ? 'people' : 'people-outline';
-          } else if (route.name === 'CompanyProfile') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#2d6a4f',
-        tabBarInactiveTintColor: 'gray',
-        tabBarShowLabel: true,
-        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
-        tabBarLabelPosition: 'below-icon',
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 0,
-          elevation: 10,
-          shadowOpacity: 0.1,
-        },
-      })}
+      screenOptions={({ route }) => {
+        console.log('Tab screen options for route:', route.name);
+        return {
+          headerShown: false,
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === 'CompanyPortal') {
+              iconName = focused ? 'business' : 'business-outline';
+            } else if (route.name === 'CollectionMgmt') {
+              iconName = focused ? 'list' : 'list-outline';
+            } else if (route.name === 'Analytics') {
+              iconName = focused ? 'analytics' : 'analytics-outline';
+            } else if (route.name === 'Employees') {
+              iconName = focused ? 'people' : 'people-outline';
+            } else if (route.name === 'CompanyProfile') {
+              iconName = focused ? 'person' : 'person-outline';
+            }
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#2d6a4f',
+          tabBarInactiveTintColor: 'gray',
+          tabBarShowLabel: true,
+          tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+          tabBarLabelPosition: 'below-icon',
+          tabBarStyle: {
+            backgroundColor: '#ffffff',
+            borderTopWidth: 0,
+            elevation: 10,
+            shadowOpacity: 0.1,
+          },
+        };
+      }}
     >
       <Tab.Screen name="CompanyPortal" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
       <Tab.Screen name="CollectionMgmt" component={CollectionManagement} options={{ tabBarLabel: 'Collection' }} />
