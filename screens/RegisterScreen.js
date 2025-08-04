@@ -204,36 +204,32 @@ const RegisterScreen = ({ navigation, route }) => {
         setTimeout(() => navigation.navigate("Login"), 1500);
       } else {
         // Prepare company location data
-        let companyAddressData;
+        let addressPayload;
         if (typeof companyLocation === 'object' && companyLocation.coordinates) {
           // New JSON format with coordinates
-          companyAddressData = {
-            name: companyLocation.name,
+          const mapCoordinates = [companyLocation.coordinates.longitude, companyLocation.coordinates.latitude]
+         addressPayload= {
+          companyAddress :{
             district: companyLocation.district,
             sector: companyLocation.sector,
-            coordinates: companyLocation.coordinates,
-            types: companyLocation.types,
-            hours: companyLocation.hours,
-            contact: companyLocation.contact,
-            capacity: companyLocation.capacity,
-            status: companyLocation.status,
-            description: companyLocation.description,
-            manager: companyLocation.manager
-          };
-          console.log('Sending company location with coordinates:', companyAddressData);
+            location:{
+              type: "Point",
+              coordinates: mapCoordinates
+            }
+          }
+          }
         } else {
           // Fallback for string format (backward compatibility)
-          companyAddressData = companyLocation;
-          console.log('Sending company location as string:', companyAddressData);
+          addressPayload = companyLocation;
+          console.log('Sending company location as string:', addressPayload);
         }
-
         const response = await axios.post(
           "https://trash2treasure-backend.onrender.com/registerCompany",
           {
             companyName,
             email,
             phoneNumber,
-            companyAddress: companyAddressData,
+            companyAddress: addressPayload.companyAddress,
             contactPersonalName: companyContact,
             password,
             wasteTypeHandled: wasteTypes,
