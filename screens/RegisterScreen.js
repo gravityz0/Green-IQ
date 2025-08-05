@@ -184,6 +184,7 @@ const RegisterScreen = ({ navigation, route }) => {
     setIsLoading(true);
     try {
       if (userType === "citizen") {
+        console.log(location)
         const response = await axios.post(
           "https://trash2treasure-backend.onrender.com/register",
           {
@@ -194,6 +195,7 @@ const RegisterScreen = ({ navigation, route }) => {
             phoneNumber,
             userType,
             referralUsed: referralCode,
+            location: companyLocation.sector
           }
         );
         Toast.show({

@@ -7,6 +7,8 @@ import {
   Pressable,
   Image,
   ScrollView,
+  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { Camera, CameraView } from "expo-camera";
@@ -24,6 +26,8 @@ import { cleanText } from "../utils/cleanText";
 import { extractYoutubeUrl } from "../utils/extractYoutubeURL";
 import { WebView } from "react-native-webview";
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
 const ProductScanScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,6 +37,13 @@ const ProductScanScreen = () => {
   const [cameraClicked, setCameraClicked] = useState(false);
   const [analysis, setAnalysis] = useState("");
   const [videoId, setVideoId] = useState("");
+
+  // Responsive dimensions
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isTablet = windowWidth >= 768;
+  const isSmallDevice = windowWidth < 375;
+  const isLandscape = windowWidth > windowHeight;
+
   useEffect(() => {
     if (cameraClicked && hasPermission !== true) {
       const getCameraPermission = async () => {
@@ -106,209 +117,148 @@ const ProductScanScreen = () => {
   };
 
   if (hasPermission == false) {
-    return <Text>No camera permission</Text>;
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>Camera permission required</Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
   }
 
   const giveColor = (grade) => {
+    const gradeContainerStyle = [
+      styles.gradeContainer,
+      isTablet && styles.gradeContainerTablet,
+      isSmallDevice && styles.gradeContainerSmall
+    ];
+
+    const gradeTextStyle = [
+      styles.gradeLabel,
+      isTablet && styles.gradeLabelTablet,
+      isSmallDevice && styles.gradeLabelSmall
+    ];
+
     switch (grade) {
       case "a":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circle}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circleGreen]}>
               <Text style={styles.gradeText}>A</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 10,
-                fontWeight: "bold",
-                fontSize: 15,
-                color: "#00A784",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#00A784" }]}>
               Eco Friendly
             </Text>
           </View>
         );
-        break;
 
       case "b":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circle}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circleGreen]}>
               <Text style={styles.gradeText}>B</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 10,
-                fontWeight: "bold",
-                fontSize: 15,
-                color: "#00A784",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#00A784" }]}>
               Eco Friendly
             </Text>
           </View>
         );
-        break;
 
       case "c":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circleYellow}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circleYellow]}>
               <Text style={styles.gradeText}>C</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 10,
-                fontWeight: "bold",
-                fontSize: 15,
-                color: "#f0fc06ff",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#f0fc06ff" }]}>
               Eco Friendly
             </Text>
           </View>
         );
-        break;
 
       case "d":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circleRed}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circleRed]}>
               <Text style={styles.gradeText}>D</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 10,
-                fontWeight: "bold",
-                fontSize: 15,
-                color: "#ff0303ff",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#ff0303ff" }]}>
               Not Eco Friendly
             </Text>
           </View>
         );
-        break;
 
       case "e":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circleRed}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circleRed]}>
               <Text style={styles.gradeText}>E</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 10,
-                fontWeight: "bold",
-                fontSize: 15,
-                color: "#ff0303ff",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#ff0303ff" }]}>
               Not Eco Friendly
             </Text>
           </View>
         );
-        break;
 
       case "unknown":
         return (
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <View style={styles.circlePurple}>
+          <View style={gradeContainerStyle}>
+            <View style={[styles.circle, styles.circlePurple]}>
               <Text style={styles.gradeText}>?</Text>
             </View>
-            <Text
-              style={{
-                paddingLeft: 8,
-                fontWeight: "bold",
-                fontSize: 10,
-                color: "#ff6ae4ff",
-              }}
-            >
+            <Text style={[gradeTextStyle, { color: "#ff6ae4ff" }]}>
               Refer to analysis
             </Text>
           </View>
         );
-        break;
+
       default:
         return null;
     }
   };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView
-        style={{ flex: 1 }}
+        style={styles.safeArea}
         edges={["top","bottom", "left", "right"]}
       >
         {showCamera && (
-          <View
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "relative",
-              backgroundColor: "none",
-            }}
-          >
+          <View style={styles.cameraContainer}>
             <CameraView
               onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-              style={{ flex: 1 }}
+              style={styles.camera}
             />
-            <View
-              style={{
-                position: "absolute",
-                top: hp("35%"),
-                left: wp("20%"),
-                width: wp("60%"),
-                height: hp("30%"),
-                borderWidth: 10,
-                borderColor: "white",
-                borderRadius: 20,
-                zIndex: 10,
-              }}
-            />
+            <View style={[
+              styles.scanFrame,
+              isTablet && styles.scanFrameTablet,
+              isSmallDevice && styles.scanFrameSmall
+            ]} />
           </View>
         )}
-        <ScrollView>
-          {loading && <ActivityIndicator size="large" color="#00A784"/>}
+        
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            isTablet && styles.scrollContentTablet
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#00A784"/>
+            </View>
+          )}
+          
           {!cameraClicked && (
             <Pressable
-              style={styles.cameraHolder}
+              style={[
+                styles.cameraHolder,
+                isTablet && styles.cameraHolderTablet,
+                isSmallDevice && styles.cameraHolderSmall,
+                isLandscape && styles.cameraHolderLandscape
+              ]}
               onPress={() => {
                 setCameraClicked(true);
                 setProduct(null);
@@ -316,38 +266,65 @@ const ProductScanScreen = () => {
                 setScanner(false);
                 setVideoId("");
                 setAnalysis(null);
-
               }}
             >
-              <FontAwesome name="camera" size={30} style={{ color: "white" }} />
-              <Text style={{ color: "white", marginTop: 2 }}>
+              <FontAwesome 
+                name="camera" 
+                size={isTablet ? 40 : isSmallDevice ? 24 : 30} 
+                style={styles.cameraIcon} 
+              />
+              <Text style={[
+                styles.cameraText,
+                isTablet && styles.cameraTextTablet,
+                isSmallDevice && styles.cameraTextSmall
+              ]}>
                 Scan a product
               </Text>
             </Pressable>
           )}
 
           {product && (
-            <View>
-              <View style={styles.container}>
-                <View>
+            <View style={[
+              styles.productContainer,
+              isTablet && styles.productContainerTablet,
+              isLandscape && styles.productContainerLandscape
+            ]}>
+              <View style={[
+                styles.productCard,
+                isTablet && styles.productCardTablet
+              ]}>
+                <View style={[
+                  styles.imageContainer,
+                  isTablet && styles.imageContainerTablet
+                ]}>
                   <Image
                     source={
                       product.image ? { uri: product.image } : NoProductImage
                     }
-                    style={styles.productImage}
+                    style={[
+                      styles.productImage,
+                      isTablet && styles.productImageTablet,
+                      isSmallDevice && styles.productImageSmall
+                    ]}
+                    resizeMode="cover"
                   />
                 </View>
-                <View style={styles.aboutHotels}>
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      fontWeight: "bold",
-                      paddingBottom: 8,
-                    }}
-                  >
+                <View style={[
+                  styles.productInfo,
+                  isTablet && styles.productInfoTablet
+                ]}>
+                  <Text style={[
+                    styles.productName,
+                    isTablet && styles.productNameTablet,
+                    isSmallDevice && styles.productNameSmall
+                  ]}>
                     {product.product_name}
                   </Text>
-                  <Text style={{ paddingBottom: 3, fontWeight: "bold" }}>
+                  <Text style={[
+                    styles.gradeLabel,
+                    isTablet && styles.gradeLabelTablet,
+                    isSmallDevice && styles.gradeLabelSmall
+                  ]}>
                     Grade: {product.grade}
                   </Text>
                   {giveColor(product.grade)}
@@ -357,24 +334,39 @@ const ProductScanScreen = () => {
           )}
 
           {analysis && (
-            <View style={{ marginTop: 20, paddingHorizontal: 20 }}>
-              <Text
-                style={{ fontWeight: "bold", fontSize: 18, marginBottom: 8 }}
-              >
+            <View style={[
+              styles.analysisContainer,
+              isTablet && styles.analysisContainerTablet
+            ]}>
+              <Text style={[
+                styles.analysisTitle,
+                isTablet && styles.analysisTitleTablet,
+                isSmallDevice && styles.analysisTitleSmall
+              ]}>
                 Environmental Impact Analysis:
               </Text>
-              <Text style={styles.paragraph}>{analysis}</Text>
+              <Text style={[
+                styles.paragraph,
+                isTablet && styles.paragraphTablet,
+                isSmallDevice && styles.paragraphSmall
+              ]}>
+                {analysis}
+              </Text>
             </View>
           )}
 
           {videoId !== "" && (
-            <View style={styles.videoView}>
+            <View style={[
+              styles.videoView,
+              isTablet && styles.videoViewTablet,
+              isSmallDevice && styles.videoViewSmall
+            ]}>
               <WebView
                 source={{ uri: `https://www.youtube.com/embed/${videoId}` }}
                 javaScriptEnabled={true}
                 allowsFullscreenVideo={true}
                 domStorageEnabled={true}
-                style={{ flex: 1 }}
+                style={styles.webView}
               />
             </View>
           )}
@@ -385,108 +377,311 @@ const ProductScanScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  permissionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  permissionText: {
+    fontSize: 18,
+    color: "#666",
+    textAlign: "center",
+  },
+  cameraContainer: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    backgroundColor: "transparent",
+  },
+  camera: {
+    flex: 1,
+  },
+  scanFrame: {
+    position: "absolute",
+    top: "35%",
+    left: "20%",
+    width: "60%",
+    height: "30%",
+    borderWidth: 10,
+    borderColor: "white",
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  scanFrameTablet: {
+    top: "30%",
+    left: "25%",
+    width: "50%",
+    height: "40%",
+    borderWidth: 12,
+    borderRadius: 25,
+  },
+  scanFrameSmall: {
+    top: "40%",
+    left: "15%",
+    width: "70%",
+    height: "25%",
+    borderWidth: 8,
+    borderRadius: 15,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  scrollContentTablet: {
+    paddingHorizontal: 40,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
   cameraHolder: {
     backgroundColor: "#00A784",
     height: 200,
-    width: 300,
+    width: "100%",
+    maxWidth: 300,
     marginTop: 30,
-    marginLeft: 30,
+    marginBottom: 20,
     borderRadius: 30,
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
-
-  container: {
-    display: "flex",
+  cameraHolderTablet: {
+    height: 250,
+    maxWidth: 400,
+    borderRadius: 40,
+    marginTop: 40,
+  },
+  cameraHolderSmall: {
+    height: 160,
+    maxWidth: 280,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  cameraHolderLandscape: {
+    height: 150,
+    maxWidth: 250,
+    marginTop: 15,
+  },
+  cameraIcon: {
+    color: "white",
+    marginBottom: 8,
+  },
+  cameraText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  cameraTextTablet: {
+    fontSize: 20,
+  },
+  cameraTextSmall: {
+    fontSize: 14,
+  },
+  productContainer: {
+    marginTop: 20,
+  },
+  productContainerTablet: {
+    marginTop: 30,
+  },
+  productContainerLandscape: {
+    marginTop: 15,
+  },
+  productCard: {
     flexDirection: "row",
-    paddingLeft: 20,
-    paddingTop: 30,
-    overflow: "hidden",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  productCardTablet: {
+    padding: 30,
+    borderRadius: 25,
+  },
+  imageContainer: {
+    marginRight: 20,
+  },
+  imageContainerTablet: {
+    marginRight: 30,
   },
   productImage: {
-    resizeMode: "cover",
+    width: wp("35%"),
+    height: hp("18%"),
+    borderRadius: 15,
+    minWidth: 120,
+    minHeight: 120,
+  },
+  productImageTablet: {
+    width: wp("25%"),
+    height: hp("15%"),
+    borderRadius: 20,
+    minWidth: 150,
+    minHeight: 150,
+  },
+  productImageSmall: {
     width: wp("40%"),
     height: hp("20%"),
-    borderRadius: 20,
+    borderRadius: 12,
+    minWidth: 100,
+    minHeight: 100,
   },
-
-  aboutHotels: {
-    display: "flex",
+  productInfo: {
+    flex: 1,
     justifyContent: "center",
-    padding: 12,
   },
-
-  circle: {
-    width: wp("10%"),
-    height: wp("10%"),
-    borderRadius: wp("5%"),
-    backgroundColor: "#00A784",
-    justifyContent: "center",
-    alignItems: "center",
-    display: "flex",
-    marginTop: 2,
+  productInfoTablet: {
+    justifyContent: "flex-start",
+    paddingTop: 10,
   },
-
-  paragraph: {
-    fontSize: 16,
-    lineHeight: 24,
+  productName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
     color: "#333",
-    marginVertical: 8,
-    textAlign: "left",
+    lineHeight: 24,
   },
-
+  productNameTablet: {
+    fontSize: 24,
+    marginBottom: 16,
+    lineHeight: 30,
+  },
+  productNameSmall: {
+    fontSize: 16,
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  gradeLabel: {
+    marginBottom: 8,
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "#666",
+  },
+  gradeLabelTablet: {
+    fontSize: 18,
+    marginBottom: 12,
+  },
+  gradeLabelSmall: {
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  gradeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  gradeContainerTablet: {
+    marginTop: 4,
+  },
+  gradeContainerSmall: {
+    marginTop: 2,
+  },
+  circle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  circleGreen: {
+    backgroundColor: "#00A784",
+  },
   circleYellow: {
-    width: wp("10%"),
-    height: wp("10%"),
-    borderRadius: wp("5%"),
     backgroundColor: "#f0fc06ff",
-    justifyContent: "center",
-    alignItems: "center",
-    display: "flex",
-    marginTop: 2,
   },
-
   circleRed: {
-    width: wp("10%"),
-    height: wp("10%"),
-    borderRadius: wp("5%"),
     backgroundColor: "#ff0303ff",
-    justifyContent: "center",
-    alignItems: "center",
-    display: "flex",
-    marginTop: 2,
   },
-
   circlePurple: {
-    width: wp("10%"),
-    height: wp("10%"),
-    borderRadius: wp("5%"),
     backgroundColor: "#ff6ae4ff",
-    justifyContent: "center",
-    alignItems: "center",
-    display: "flex",
-    marginTop: 2,
   },
-
   gradeText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 18,
   },
-
+  analysisContainer: {
+    marginTop: 30,
+    paddingHorizontal: 0,
+  },
+  analysisContainerTablet: {
+    marginTop: 40,
+  },
+  analysisTitle: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 12,
+    color: "#333",
+  },
+  analysisTitleTablet: {
+    fontSize: 22,
+    marginBottom: 16,
+  },
+  analysisTitleSmall: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  paragraph: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: "#333",
+    textAlign: "left",
+  },
+  paragraphTablet: {
+    fontSize: 17,
+    lineHeight: 28,
+  },
+  paragraphSmall: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
   videoView: {
-    height: 230,
-    marginHorizontal: 16,
-    marginVertical: 12,
-    borderRadius: 12,
+    height: 220,
+    marginTop: 20,
+    marginBottom: 10,
+    borderRadius: 15,
     overflow: "hidden",
-    elevation: 4,
     backgroundColor: "#000",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  videoViewTablet: {
+    height: 300,
+    marginTop: 30,
+    marginBottom: 20,
+    borderRadius: 20,
+  },
+  videoViewSmall: {
+    height: 180,
+    marginTop: 15,
+    marginBottom: 5,
+    borderRadius: 12,
+  },
+  webView: {
+    flex: 1,
   },
 });
+
 export default ProductScanScreen;

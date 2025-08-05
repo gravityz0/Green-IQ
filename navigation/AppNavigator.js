@@ -4,6 +4,8 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CollectionPoints from '../screens/CollectionPoints';
+import SafeZonesMap from '../screens/SafeZonesMap';
+import SafeZoneAlerts from '../screens/SafeZoneAlerts';
 import Achievements from '../screens/Achievements';
 import ScanChoiceScreen from '../screens/ScanChoiceScreen';
 import ProductScanScreen from '../screens/ProductScanScreen';
@@ -48,6 +50,22 @@ export default function AppNavigator() {
       />
       <Stack.Screen name="Challenges" component={ChallengesScreen} options={{ title: 'Challenges' }} />
       <Stack.Screen name="Achievements" component={Achievements} options={{ title: 'Achievements', headerShown: false }} />
+      <Stack.Screen 
+        name="SafeZonesMap" 
+        component={SafeZonesMap} 
+        options={{ 
+          title: 'Safe Zones Map',
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="SafeZoneAlerts" 
+        component={SafeZoneAlerts} 
+        options={{ 
+          title: 'Climate Alerts',
+          headerShown: false,
+        }} 
+      />
     </Stack.Navigator>
   );
 }

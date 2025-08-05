@@ -103,7 +103,7 @@ const ProfileScreen = ({ navigation }) => {
               </View>
             </View>
             {/* Progress bar to next badge */}
-            <View style={{ marginTop: 12 }}>
+            {/* <View style={{ marginTop: 12 }}>
               <Text style={{ color: "#888", fontSize: 13, marginBottom: 2 }}>
                 Progress to next badge
               </Text>
@@ -132,9 +132,9 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={{ color: "#1B5E20", fontSize: 12, marginTop: 2 }}>
                 Earn 5 more points for your next badge!
               </Text>
-            </View>
+            </View> */}
             {/* Interactive buttons */}
-            <View
+            {/* <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
@@ -155,23 +155,23 @@ const ProfileScreen = ({ navigation }) => {
                 <Ionicons name="analytics-outline" size={20} color="#00C896" />
                 <Text style={styles.actionButtonText}>Eco Points</Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </LinearGradient>
         </View>
 
         <View style={styles.menuContainer}>
-          <TouchableOpacity style={styles.menuItem}>
+          {/* <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="person-outline" size={24} color="#1b4332" />
             <Text style={styles.menuItemText}>Edit Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          </TouchableOpacity> */}
+          {/* <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="settings-outline" size={24} color="#1b4332" />
             <Text style={styles.menuItemText}>Settings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
+          </TouchableOpacity> */}
+          {/* <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="notifications-outline" size={24} color="#1b4332" />
             <Text style={styles.menuItemText}>Notifications</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="help-circle-outline" size={24} color="#1b4332" />
             <Text style={styles.menuItemText}>Help Center</Text>
