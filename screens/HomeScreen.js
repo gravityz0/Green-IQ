@@ -68,8 +68,42 @@ const HomeScreen = ({ navigation }) => {
   const quickActionsAnim = useRef(new RNAnimated.Value(0)).current;
   
   const window = useWindowDimensions();
-  const isTablet = window.width >= 700;
+  const isTablet = window.width >= 768;
   const isSmallDevice = window.width < 350;
+  const isMediumDevice = window.width >= 350 && window.width < 450;
+  const isLargeDevice = window.width >= 450;
+
+  // Responsive dimensions
+  const getResponsiveSize = (small, medium, large, tablet) => {
+    if (isTablet) return tablet;
+    if (isSmallDevice) return small;
+    if (isMediumDevice) return medium;
+    return large;
+  };
+
+  const responsiveSizes = {
+    // Font sizes
+    titleSize: getResponsiveSize(16, 18, 20, 24),
+    subtitleSize: getResponsiveSize(12, 13, 14, 16),
+    bodySize: getResponsiveSize(11, 12, 13, 15),
+    headerSize: getResponsiveSize(18, 20, 22, 26),
+    userNameSize: getResponsiveSize(16, 18, 20, 24),
+    
+    // Spacing
+    sectionSpacing: getResponsiveSize(16, 20, 24, 32),
+    cardPadding: getResponsiveSize(12, 16, 18, 24),
+    iconSize: getResponsiveSize(16, 18, 20, 24),
+    largeIconSize: getResponsiveSize(24, 28, 32, 40),
+    
+    // Card dimensions
+    cardRadius: getResponsiveSize(12, 14, 16, 20),
+    avatarSize: getResponsiveSize(32, 36, 40, 48),
+    fabSize: getResponsiveSize(50, 56, 60, 68),
+    
+    // Grid spacing
+    gridGap: getResponsiveSize(8, 12, 16, 20),
+    containerPadding: getResponsiveSize(16, 18, 20, 24),
+  };
 
   useEffect(() => {
     const getUserinfo = async () => {
@@ -235,9 +269,43 @@ const HomeScreen = ({ navigation }) => {
   ];
 
   const leaderboard = [
-    { id: 1, name: 'EcoWarrior John', points: 15430, avatar: null },
-    { id: 2, name: 'Green Sarah', points: 12890, avatar: null },
-    { id: 3, name: 'RecyclePro Mike', points: 11250, avatar: null },
+    { id: 1, name: 'Niyobyose Isaac Precieux', points: 15430, avatar: null },
+    { id: 2, name: 'gravity0071@gmail.com', points: 12890, avatar: null },
+  ];
+
+  const nearbyCompanies = [
+    { 
+      id: 1, 
+      name: 'Seoul Green Recycling Co.', 
+      phone: '+82-2-1234-5678',
+      distance: '0.5km',
+      rating: 4.8,
+      types: ['Plastic', 'Paper', 'Glass']
+    },
+    { 
+      id: 2, 
+      name: 'Busan Eco Solutions', 
+      phone: '+82-51-9876-5432',
+      distance: '1.2km',
+      rating: 4.6,
+      types: ['Electronics', 'Metal', 'Plastic']
+    },
+    { 
+      id: 3, 
+      name: 'Incheon Waste Management', 
+      phone: '+82-32-5555-1234',
+      distance: '2.1km',
+      rating: 4.9,
+      types: ['Organic', 'Paper', 'Glass']
+    },
+    { 
+      id: 4, 
+      name: 'Daegu Recycling Center', 
+      phone: '+82-53-7777-8888',
+      distance: '3.5km',
+      rating: 4.7,
+      types: ['Plastic', 'Metal', 'Electronics']
+    }
   ];
 
   const progress = user?.ecoPoints ? Math.min(user.ecoPoints / 1000, 1) : 0.1;
@@ -245,47 +313,11 @@ const HomeScreen = ({ navigation }) => {
   const quickActions = [
     { icon: "scan-outline", label: "Scan", action: () => navigation.navigate("ScanChoice") },
     { icon: "map-outline", label: "Map", action: () => navigation.navigate("Map") },
-    { icon: "qr-code-outline", label: "Redeem", action: () => navigation.navigate("Rewards") },
+    { icon: "qr-code-outline", label: "Purchase", action: () => navigation.navigate("Rewards") },
     { icon: "settings-outline", label: "Settings", action: () => navigation.navigate("Settings") },
   ];
 
-  const compactSectionSpacing = [styles.sectionSpacing, isTablet ? { marginTop: 18, marginBottom: 18, paddingHorizontal: 28, maxWidth: 800 } : { marginTop: 18, marginBottom: 18, paddingHorizontal: 12, maxWidth: '95%' }];
-
-  const compactSectionHeader = [styles.sectionHeader, { marginBottom: 10 }];
-  const compactSectionTitle = [styles.sectionTitle, { fontSize: 16 }];
-  const compactSeeAllText = [styles.seeAllText, { fontSize: 13 }];
-
-  const compactStatCard = [styles.statCard, isTablet ? { width: '30%', minWidth: 120, maxWidth: 220, padding: 12, borderRadius: 14, marginBottom: 14 } : { width: '47%', minWidth: 100, maxWidth: 180, padding: 10, borderRadius: 12, marginBottom: 12 }];
-  const compactStatValue = [styles.statValue, { fontSize: 18 }];
-  const compactStatLabel = [styles.statLabel, { fontSize: 11 }];
-
-  const compactProgressCard = [styles.progressCard, isTablet ? { marginBottom: 18, maxWidth: 800, borderRadius: 14, padding: 12 } : { marginBottom: 14, maxWidth: '95%', borderRadius: 12, padding: 8 }];
-
-  const compactBadgeCircle = (badge) => [
-    styles.badgeCircle,
-    {
-      width: 90,
-      height: 110,
-      borderRadius: 24,
-      marginHorizontal: 28,
-      backgroundColor: 'transparent',
-      shadowColor: 'transparent',
-      borderWidth: 2,
-      borderColor: badge.earned ? badge.color : '#e0e0e0',
-    },
-  ];
-  const compactBadgeLabel = [styles.badgeLabel, { fontSize: 14 }];
-
   const leaderboardPreview = leaderboard.slice(0, 2);
-
-  const compactQuickLinksRow = [styles.quickLinksRow, isTablet ? { gap: 18, marginBottom: 18, maxWidth: 800 } : { gap: 10, marginBottom: 14, maxWidth: '95%' }];
-  const compactQuickLinkIconWrap = [styles.quickLinkIconWrap, isTablet ? { padding: 12 } : { padding: 8 }];
-  const compactQuickLinkLabel = [styles.quickLinkLabel, { fontSize: 11 }];
-
-  const compactDailyChallengeCard = [styles.dailyChallengeCard, isTablet ? { marginBottom: 18, maxWidth: 800, borderRadius: 14 } : { marginBottom: 14, maxWidth: '95%', borderRadius: 12 }];
-  const compactDailyChallengeGradient = [styles.dailyChallengeGradient, isTablet ? { padding: 18, borderRadius: 14 } : { padding: 10, borderRadius: 12 }];
-  const compactDailyChallengeTitle = [styles.dailyChallengeTitle, { fontSize: 14 }];
-  const compactDailyChallengeText = [styles.dailyChallengeText, { fontSize: 11 }];
 
   const featuredRewards = [
     {
@@ -312,7 +344,7 @@ const HomeScreen = ({ navigation }) => {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color="#1B5E20" />
-        <Text style={styles.loadingText}>Loading your eco profile...</Text>
+        <Text style={[styles.loadingText, { fontSize: responsiveSizes.bodySize }]}>Loading your eco profile...</Text>
       </SafeAreaView>
     );
   }
@@ -321,10 +353,10 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      <View style={styles.simpleTopNav}>
+      <View style={[styles.simpleTopNav, { paddingHorizontal: responsiveSizes.containerPadding }]}>
         <View style={styles.simpleTopNavLeft}>
-          <Text style={styles.simpleTopNavGreeting}>Welcome back,</Text>
-          <Text style={styles.simpleTopNavUserName} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={[styles.simpleTopNavGreeting, { fontSize: responsiveSizes.subtitleSize }]}>Welcome back,</Text>
+          <Text style={[styles.simpleTopNavUserName, { fontSize: responsiveSizes.userNameSize }]} numberOfLines={1} adjustsFontSizeToFit>
             {user ? user.fullNames : "Guest User"}
           </Text>
         </View>
@@ -333,21 +365,39 @@ const HomeScreen = ({ navigation }) => {
           style={styles.simpleTopNavAvatarTouchable}
           accessibilityLabel={user ? "Go to profile" : "Login"}
         >
-          <View style={styles.simpleTopNavAvatarWrap}>
+          <View style={[styles.simpleTopNavAvatarWrap, { 
+            width: responsiveSizes.avatarSize, 
+            height: responsiveSizes.avatarSize, 
+            borderRadius: responsiveSizes.avatarSize / 2 
+          }]}>
             {user && user.profilePic ? (
               <Image
                 source={{ uri: `https://trash2treasure-backend.onrender.com/${user.profilePic}` }}
-                style={styles.simpleTopNavAvatar}
+                style={[styles.simpleTopNavAvatar, { 
+                  width: responsiveSizes.avatarSize, 
+                  height: responsiveSizes.avatarSize, 
+                  borderRadius: responsiveSizes.avatarSize / 2 
+                }]}
               />
             ) : (
-              <Ionicons name="person" size={28} color="#FF3D57" style={{ backgroundColor: '#bbb', borderRadius: 16, padding: 8 }} />
+              <Ionicons 
+                name="person" 
+                size={responsiveSizes.iconSize} 
+                color="#FF3D57" 
+                style={{ 
+                  backgroundColor: '#bbb', 
+                  borderRadius: responsiveSizes.avatarSize / 4, 
+                  padding: responsiveSizes.avatarSize / 8 
+                }} 
+              />
             )}
           </View>
         </TouchableOpacity>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: responsiveSizes.containerPadding }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -357,150 +407,177 @@ const HomeScreen = ({ navigation }) => {
           />
         }
       >
-        <TouchableOpacity style={compactDailyChallengeCard} onPress={() => navigation.navigate('Challenges')} activeOpacity={0.9}>
-          <LinearGradient colors={["#fffbe6", "#e0f7fa"]} style={compactDailyChallengeGradient}>
+        <TouchableOpacity 
+          style={[styles.dailyChallengeCard, { 
+            borderRadius: responsiveSizes.cardRadius,
+            marginTop: responsiveSizes.sectionSpacing,
+            marginBottom: responsiveSizes.sectionSpacing / 2
+          }]} 
+          onPress={() => navigation.navigate('Challenges')} 
+          activeOpacity={0.9}
+        >
+          <LinearGradient colors={["#fffbe6", "#e0f7fa"]} style={[styles.dailyChallengeGradient, { 
+            borderRadius: responsiveSizes.cardRadius,
+            padding: responsiveSizes.cardPadding
+          }]}>
             <View style={styles.dailyChallengeContent}>
-              <Ionicons name="flash" size={isTablet ? 24 : 18} color="#FF6B35" style={{ marginRight: 10 }} />
+              <Ionicons name="flash" size={responsiveSizes.iconSize} color="#FF6B35" style={{ marginRight: 10 }} />
               <View style={{ flex: 1 }}>
-                <Text style={compactDailyChallengeTitle}>Daily Challenge</Text>
-                <Text style={compactDailyChallengeText}>Recycle 5 plastic bottles today and earn bonus points!</Text>
+                <Text style={[styles.dailyChallengeTitle, { fontSize: responsiveSizes.titleSize }]}>Daily Challenge</Text>
+                <Text style={[styles.dailyChallengeText, { fontSize: responsiveSizes.bodySize }]}>Recycle 5 plastic bottles today and earn bonus points!</Text>
               </View>
-              <Ionicons name="chevron-forward" size={isTablet ? 20 : 16} color="#FF6B35" />
+              <Ionicons name="chevron-forward" size={responsiveSizes.iconSize} color="#FF6B35" />
             </View>
           </LinearGradient>
         </TouchableOpacity>
-        <View style={compactQuickLinksRow}>
-          {[{ icon: 'scan-outline', label: 'Scan', nav: 'ScanChoice' }, { icon: 'medal-outline', label: 'Badges', nav: 'Achievements' }, { icon: 'analytics-outline', label: 'Stats', nav: 'EcoPointsDetails' }, { icon: 'chatbubbles-outline', label: 'Community', nav: 'Chat' }].map((item, idx) => (
-            <TouchableOpacity key={item.label} style={styles.quickLinkButton} onPress={() => navigation.navigate(item.nav)} activeOpacity={0.85}>
-              <View style={compactQuickLinkIconWrap}>
-                <Ionicons name={item.icon} size={isTablet ? 20 : 16} color="#FF3D57" />
+
+        <View style={[styles.quickLinksRow, { 
+          gap: responsiveSizes.gridGap,
+          marginBottom: responsiveSizes.sectionSpacing
+        }]}>
+          {[{ icon: 'scan-outline', label: 'Scan', nav: 'ScanChoice' }, { icon: 'business-outline', label: 'Nearby Companies', nav: 'NearByCompanies' }].map((item, idx) => (
+            <TouchableOpacity 
+              key={item.label} 
+              style={styles.quickLinkButton} 
+              onPress={() => navigation.navigate(item.nav)} 
+              activeOpacity={0.85}
+            >
+              <View style={[styles.quickLinkIconWrap, { 
+                padding: responsiveSizes.cardPadding / 2,
+                borderRadius: responsiveSizes.cardRadius
+              }]}>
+                <Ionicons name={item.icon} size={responsiveSizes.iconSize} color="#FF3D57" />
               </View>
-              <Text style={compactQuickLinkLabel}>{item.label}</Text>
+              <Text style={[styles.quickLinkLabel, { fontSize: responsiveSizes.bodySize }]}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
-        <RNAnimated.View style={compactSectionSpacing}>
-          <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>📊 My Eco-Impact</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('EcoPointsDetails')}>
-              <Text style={compactSeeAllText}>See All</Text>
-            </TouchableOpacity>
+
+        <View style={[styles.section, { 
+          marginTop: responsiveSizes.sectionSpacing,
+          marginBottom: responsiveSizes.sectionSpacing
+        }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { fontSize: responsiveSizes.titleSize }]}>🏆 Top Recyclers</Text>
+            <Text style={[styles.seeAllText, { fontSize: responsiveSizes.bodySize }]}>See All</Text>
           </View>
-          <View style={[styles.statsGrid, isTablet ? { gap: 18, justifyContent: 'flex-start' } : {}]}>
-            {stats.map((stat, index) => (
-              <TouchableOpacity key={index} style={compactStatCard} activeOpacity={0.9} accessibilityLabel={stat.label} onPress={() => {
-                if (stat.label === 'Eco Points') navigation.navigate('EcoPointsDetails');
-                else if (stat.label === 'Items Recycled') navigation.navigate('Leaderboard');
-                else if (stat.label === 'Community Rank') navigation.navigate('Leaderboard');
-                else if (stat.label === 'Streak Days') navigation.navigate('Achievements');
-              }}>
-                <LinearGradient colors={["#fff", "#fafafa"]} style={styles.statCardGradient}>
-                  <LinearGradient colors={stat.gradient} style={[styles.statIconContainer, isTablet ? styles.statIconContainerTablet : {}]}>
-                    <Ionicons name={stat.icon} size={isTablet ? 18 : 14} color="#fff" />
-                  </LinearGradient>
-                  <Text style={compactStatValue}>{stat.value}</Text>
-                  <Text style={compactStatLabel}>{stat.label}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </RNAnimated.View>
-        <RNAnimated.View style={compactProgressCard}>
-          <TouchableOpacity onPress={() => navigation.navigate('Achievements')} activeOpacity={0.85}>
-            <LinearGradient colors={["#E8F5E9", "#C8E6C9"]} style={styles.progressCardGradient}>
-              <View style={styles.progressHeader}>
-                <LinearGradient colors={["#00E676", "#00C853"]} style={styles.progressIconContainer}>
-                  <Ionicons name="trending-up" size={isTablet ? 14 : 10} color="#fff" />
-                </LinearGradient>
-                <Text style={[styles.progressTitle, { fontSize: 13 }]}>Progress to Next Badge</Text>
-              </View>
-              <View style={styles.progressBarBg}>
-                <LinearGradient colors={["#00E676", "#00C853"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]} />
-              </View>
-              <Text style={[styles.progressText, { fontSize: 11, color: '#1B5E20' }]}>🏆 {Math.round(progress * 100)}% to "Eco Hero" badge</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </RNAnimated.View>
-        <View style={compactSectionSpacing}>
-          <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>🏅 Achievements</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Achievements')}>
-              <Text style={compactSeeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScrollContent}>
-            {badges.map((badge, index) => (
-              <TouchableOpacity key={badge.id} onPress={() => navigation.navigate('Achievements')} activeOpacity={0.8}>
-                <RNAnimated.View style={compactBadgeCircle(badge)}>
-                  <Ionicons name={badge.icon} size={48} color={badge.earned ? (badge.color === '#00C896' ? '#FF6B35' : badge.color) : '#bbb'} style={{ marginBottom: 8 }} />
-                  <Text style={compactBadgeLabel}>{badge.name}</Text>
-                </RNAnimated.View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        <View style={compactSectionSpacing}>
-          <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>🏆 Top Recyclers</Text>
-            <Text style={compactSeeAllText}>See All</Text>
-          </View>
-          <LinearGradient colors={["#fff", "#fff8e1"]} style={styles.leaderboardGradient}>
+          <LinearGradient colors={["#fff", "#fff8e1"]} style={[styles.leaderboardGradient, { 
+            borderRadius: responsiveSizes.cardRadius,
+            padding: responsiveSizes.cardPadding / 2
+          }]}>
             {leaderboardPreview.map((user, idx) => (
               <TouchableOpacity key={user.id} onPress={() => navigation.navigate('Leaderboard')} activeOpacity={0.8}>
-                <View style={[styles.leaderboardRow, { paddingVertical: 6, paddingHorizontal: 8 }] }>
+                <View style={[styles.leaderboardRow, { 
+                  paddingVertical: responsiveSizes.cardPadding / 3, 
+                  paddingHorizontal: responsiveSizes.cardPadding / 2 
+                }]}>
                   <View style={styles.leaderboardPosition}>
-                    <Ionicons name="trophy" size={isTablet ? 14 : 10} color={idx === 0 ? '#FFD700' : idx === 1 ? '#FF3D57' : '#FF6B35'} />
-                    <Text style={[styles.leaderboardRank, { fontSize: 10 } ]}>#{idx + 1}</Text>
+                    <Ionicons 
+                      name="trophy" 
+                      size={responsiveSizes.iconSize / 1.5} 
+                      color={idx === 0 ? '#FFD700' : idx === 1 ? '#FF3D57' : '#FF6B35'} 
+                    />
+                    <Text style={[styles.leaderboardRank, { fontSize: responsiveSizes.bodySize }]}>#{idx + 1}</Text>
                   </View>
-                  <Text style={[styles.leaderboardName, { fontSize: 11 }]} numberOfLines={1}>{user.name}</Text>
+                  <Text style={[styles.leaderboardName, { fontSize: responsiveSizes.bodySize }]} numberOfLines={1}>{user.name}</Text>
                   <View style={styles.leaderboardPointsContainer}>
-                    <Text style={[styles.leaderboardPoints, { fontSize: 11 }]}>{user.points.toLocaleString()}</Text>
-                    <Text style={[styles.leaderboardPointsLabel, { fontSize: 9 }]}>pts</Text>
+                    <Text style={[styles.leaderboardPoints, { fontSize: responsiveSizes.bodySize }]}>{user.points.toLocaleString()}</Text>
+                    <Text style={[styles.leaderboardPointsLabel, { fontSize: responsiveSizes.bodySize - 2 }]}>pts</Text>
                   </View>
                 </View>
               </TouchableOpacity>
             ))}
           </LinearGradient>
         </View>
-        <View style={compactSectionSpacing}>
-          <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>🎁 EcoPoints Rewards & Marketplace</Text>
+
+        <View style={[styles.section, { 
+          marginTop: responsiveSizes.sectionSpacing,
+          marginBottom: responsiveSizes.sectionSpacing
+        }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { fontSize: responsiveSizes.titleSize }]}>🎁 EcoPoints Rewards & Marketplace</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Rewards')}>
-              <Text style={compactSeeAllText}>View All</Text>
+              <Text style={[styles.seeAllText, { fontSize: responsiveSizes.bodySize }]}>View All</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingVertical: 6 }}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={{ paddingVertical: responsiveSizes.cardPadding / 2 }}
+          >
             {featuredRewards.map((reward) => (
-              <View key={reward.id} style={{ backgroundColor: '#e0f7fa', borderRadius: 16, padding: 14, marginRight: 16, alignItems: 'center', width: 140, elevation: 2 }}>
-                <Image source={{ uri: reward.image }} style={{ width: 48, height: 48, borderRadius: 10, marginBottom: 8, backgroundColor: '#fff' }} />
-                <Text style={{ fontWeight: 'bold', color: '#1B5E20', fontSize: 15, marginBottom: 2, textAlign: 'center' }}>{reward.name}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                  <Ionicons name="leaf" size={16} color="#FF3D57" />
-                  <Text style={{ color: '#00C896', fontWeight: 'bold', fontSize: 13, marginLeft: 4 }}>{reward.cost}</Text>
+              <View key={reward.id} style={[styles.rewardCard, { 
+                borderRadius: responsiveSizes.cardRadius,
+                padding: responsiveSizes.cardPadding,
+                marginRight: responsiveSizes.gridGap,
+                width: isTablet ? 160 : isSmallDevice ? 120 : 140
+              }]}>
+                <Image 
+                  source={{ uri: reward.image }} 
+                  style={[styles.rewardImage, { 
+                    width: responsiveSizes.largeIconSize,
+                    height: responsiveSizes.largeIconSize,
+                    borderRadius: responsiveSizes.cardRadius / 2,
+                    marginBottom: responsiveSizes.cardPadding / 2
+                  }]} 
+                />
+                <Text style={[styles.rewardName, { 
+                  fontSize: responsiveSizes.subtitleSize,
+                  marginBottom: responsiveSizes.cardPadding / 4
+                }]}>{reward.name}</Text>
+                <View style={styles.rewardCostContainer}>
+                  <Ionicons name="leaf" size={responsiveSizes.iconSize} color="#FF3D57" />
+                  <Text style={[styles.rewardCost, { 
+                    fontSize: responsiveSizes.bodySize,
+                    marginLeft: 4 
+                  }]}>{reward.cost}</Text>
                 </View>
               </View>
             ))}
           </ScrollView>
         </View> 
-        <View style={compactSectionSpacing}>
-          <View style={compactSectionHeader}>
-            <Text style={compactSectionTitle}>🌟 Discover</Text>
-            <View style={styles.sectionTitleUnderline} />
+
+        <View style={[styles.section, { 
+          marginTop: responsiveSizes.sectionSpacing,
+          marginBottom: responsiveSizes.sectionSpacing
+        }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { fontSize: responsiveSizes.titleSize }]}>🌟 Discover</Text>
+            <View style={[styles.sectionTitleUnderline, { width: responsiveSizes.sectionSpacing * 2 }]} />
           </View>
-          <View style={[styles.discoverGrid, isTablet ? { gap: 14 } : { gap: 8 }] }>
+          <View style={[styles.discoverGrid, { gap: responsiveSizes.gridGap }]}>
             {[
               { icon: "map-outline", text: "Find Drop-off", gradient: ["#4ECDC4", "#44A08D"], onPress: () => navigation.navigate("Map") },
               { icon: "shield-outline", text: "Safe Zones", gradient: ["#FF3D57", "#FFD700"], onPress: () => navigation.navigate("SafeZonesMap") },
               { icon: "newspaper-outline", text: "Recycling Tips", gradient: ["#FF6B35", "#F7931E"], onPress: () => navigation.navigate("Tips") },
-              { icon: "medal-outline", text: "Achievements", gradient: ["#9C27B0", "#673AB7"], onPress: () => navigation.navigate("Achievements") },
-              { icon: "chatbubbles-outline", text: "Community", gradient: ["#FF5722", "#FF8A65"], onPress: () => navigation.navigate("Community") }
+              { icon: "business-outline", text: "Nearby Companies", gradient: ["#FF5722", "#FF8A65"], onPress: () => navigation.navigate("NearByCompanies") }
             ].map((item, index) => (
-              <TouchableOpacity key={index} style={[styles.discoverCard, isTablet ? { width: '22%' } : { width: '47%' }]} onPress={item.onPress} activeOpacity={0.9} accessibilityLabel={item.text}>
-                <LinearGradient colors={["#fff", "#fafafa"]} style={styles.discoverCardGradient}>
-                  <LinearGradient colors={item.gradient} style={styles.discoverIconContainer}>
-                    <Ionicons name={item.icon} size={isTablet ? 16 : 12} color="#fff" />
+              <TouchableOpacity 
+                key={index} 
+                style={[styles.discoverCard, { 
+                  width: isTablet ? '22%' : '47%',
+                  borderRadius: responsiveSizes.cardRadius
+                }]} 
+                onPress={item.onPress} 
+                activeOpacity={0.9} 
+                accessibilityLabel={item.text}
+              >
+                <LinearGradient colors={["#fff", "#fafafa"]} style={[styles.discoverCardGradient, { 
+                  borderRadius: responsiveSizes.cardRadius,
+                  padding: responsiveSizes.cardPadding
+                }]}>
+                  <LinearGradient 
+                    colors={item.gradient} 
+                    style={[styles.discoverIconContainer, { 
+                      width: responsiveSizes.largeIconSize,
+                      height: responsiveSizes.largeIconSize,
+                      borderRadius: responsiveSizes.largeIconSize / 2,
+                      marginBottom: responsiveSizes.cardPadding / 2
+                    }]}
+                  >
+                    <Ionicons name={item.icon} size={responsiveSizes.iconSize} color="#fff" />
                   </LinearGradient>
-                  <Text style={[styles.discoverText, isTablet ? { fontSize: 12 } : { fontSize: 10 }]}>{item.text}</Text>
+                  <Text style={[styles.discoverText, { fontSize: responsiveSizes.bodySize }]}>{item.text}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             ))}
@@ -527,6 +604,10 @@ const HomeScreen = ({ navigation }) => {
         style={[
           styles.quickActionsContainer,
           { 
+            bottom: responsiveSizes.fabSize + 40,
+            right: responsiveSizes.containerPadding + 10,
+            borderRadius: responsiveSizes.cardRadius,
+            padding: responsiveSizes.cardPadding,
             transform: [{
               translateY: quickActionsAnim.interpolate({
                 inputRange: [0, 1],
@@ -542,17 +623,25 @@ const HomeScreen = ({ navigation }) => {
             {quickActions.map((action, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.quickActionButton}
+                style={[styles.quickActionButton, { 
+                  paddingVertical: responsiveSizes.cardPadding / 2,
+                  paddingHorizontal: responsiveSizes.cardPadding
+                }]}
                 onPress={() => {
                   toggleQuickActions();
                   action.action();
                 }}
                 activeOpacity={0.8}
               >
-                <View style={styles.quickActionIcon}>
-                  <Ionicons name={action.icon} size={24} color="#FF3D57" />
+                <View style={[styles.quickActionIcon, { 
+                  width: responsiveSizes.largeIconSize - 4,
+                  height: responsiveSizes.largeIconSize - 4,
+                  borderRadius: (responsiveSizes.largeIconSize - 4) / 2,
+                  marginRight: responsiveSizes.cardPadding / 2
+                }]}>
+                  <Ionicons name={action.icon} size={responsiveSizes.iconSize} color="#FFFFFF" />
                 </View>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
+                <Text style={[styles.quickActionLabel, { fontSize: responsiveSizes.subtitleSize }]}>{action.label}</Text>
               </TouchableOpacity>
             ))}
           </>
@@ -560,15 +649,21 @@ const HomeScreen = ({ navigation }) => {
       </RNAnimated.View>
         
       <TouchableOpacity 
-        style={styles.fab}
+        style={[styles.fab, { 
+          bottom: responsiveSizes.containerPadding + 10,
+          right: responsiveSizes.containerPadding + 10,
+          width: responsiveSizes.fabSize,
+          height: responsiveSizes.fabSize,
+          borderRadius: responsiveSizes.fabSize / 2
+        }]}
         onPress={toggleQuickActions}
         activeOpacity={0.9}
         accessibilityLabel="Quick actions"
       >
         <Ionicons 
           name={quickActionsVisible ? "close" : "menu"} 
-          size={28} 
-          color="#FF3D57" 
+          size={responsiveSizes.largeIconSize - 8} 
+          color="#FFFFFF" 
         />
       </TouchableOpacity>
     </SafeAreaView>
@@ -578,7 +673,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fffe",
+    backgroundColor: "#E8F5E9",
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -586,567 +681,202 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 20,
-    color: '#1B5E20',
-    fontSize: 16,
+    color: '#2E7D32', // Deep forest green for text
+    fontWeight: '600',
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
     alignItems: 'center',
     width: '100%',
-    maxWidth: 900,
-    alignSelf: 'center',
-  },
-  sectionSpacing: {
-    marginTop: 24,
-    marginBottom: 24,
-    paddingHorizontal: 20,
-    width: '100%',
-    maxWidth: 900,
-    alignSelf: 'center',
-  },
-  headerWrap: {
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 10 : 50,
-    paddingBottom: 25,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    elevation: 8,
-    shadowColor: "#1B5E20",
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    maxWidth: 900,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  headerLeft: {
-    flex: 1,
-    marginRight: 16,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  offlineIndicator: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginRight: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  greetingText: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#fff",
-    marginBottom: 2,
-  },
-  motivationText: {
-    fontSize: 15,
-    color: "#E8F5E8",
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  avatarTouchable: {
-    borderRadius: 32,
-    padding: 2,
-  },
-  avatarWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    elevation: 6,
-    shadowColor: "#00E676",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  avatarGradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 3,
-  },
-  avatar: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: '#f0f0f0',
-  },
-  avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ecoTipBanner: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
-    borderRadius: 18,
-    elevation: 4,
-    shadowColor: "#2E7D32",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    maxWidth: 900,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  ecoTipGradient: {
-    borderRadius: 18,
-    padding: 16,
-  },
-  ecoTipContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ecoTipIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  ecoTipText: {
-    color: '#1B5E20',
-    fontSize: 15,
-    fontWeight: '600',
-    flex: 1,
-    lineHeight: 20,
-  },
-  likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 12,
-    padding: 6,
-  },
-  likeCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  primaryActionCard: {
-    marginHorizontal: 20,
-    borderRadius: 24,
-    elevation: 12,
-    shadowColor: "#00C853",
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  primaryActionGradient: {
-    borderRadius: 24,
-    padding: 28,
-  },
-  primaryActionContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  primaryActionText: {
-    flex: 1,
-  },
-  primaryActionTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#fff",
-    marginBottom: 6,
-  },
-  primaryActionSubtitle: {
-    fontSize: 15,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  actionBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  actionBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  primaryActionIcon: {
-    marginLeft: 20,
-  },
-  scanIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    padding: 16,
-    elevation: 4,
-    shadowColor: '#1B5E20',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
   },
   section: {
-    marginTop: 32,
-    marginBottom: 16,
+    width: '100%',
     maxWidth: 900,
     alignSelf: 'center',
-    width: '100%',
-    paddingHorizontal: 20,
   },
   sectionHeader: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
     fontWeight: "800",
-    color: "#1B5E20",
-    marginBottom: 6,
+    color: "#2E7D32", 
   },
   sectionTitleUnderline: {
-    width: 40,
     height: 3,
-    backgroundColor: '#00E676',
+    backgroundColor: '#4CAF50', 
     borderRadius: 2,
   },
-  statsGrid: {
+  simpleTopNav: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
-  },
-  statCard: {
-    borderRadius: 20,
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  statCardTablet: {
-    width: '23%',
-    marginBottom: 24,
-  },
-  statCardGradient: {
-    borderRadius: 20,
-    padding: 20,
-    alignItems: 'center',
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#F5F5DC', 
+    paddingTop: Platform.OS === 'ios' ? 10 : StatusBar.currentHeight + 10,
+    paddingBottom: 10,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  statIconContainerTablet: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginBottom: 16,
+  simpleTopNavLeft: {
+    flex: 1,
+    flexDirection: 'column',
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1B5E20',
-    marginBottom: 4,
+  simpleTopNavGreeting: {
+    color: '#8D6E63', 
+    fontWeight: '500',
   },
-  statValueTablet: {
-    fontSize: 32,
+  simpleTopNavUserName: {
+    color: '#2E7D32', 
+    fontWeight: '700',
+    maxWidth: '80%',
   },
-  statLabel: {
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  statLabelTablet: {
-    fontSize: 16,
-  },
-  progressCard: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    borderRadius: 20,
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    backgroundColor: 'transparent',
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  progressCardGradient: {
-    borderRadius: 20,
-    padding: 20,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  progressIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  simpleTopNavAvatarTouchable: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
-  progressTitle: {
-    fontWeight: '700',
-    color: '#1B5E20',
-    fontSize: 16,
+  simpleTopNavAvatarWrap: {
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9', 
   },
-  progressBarBg: {
+  simpleTopNavAvatar: {
+    resizeMode: 'cover',
+  },
+  dailyChallengeCard: {
     width: '100%',
-    height: 12,
-    backgroundColor: '#E8F5E8',
-    borderRadius: 8,
-    marginVertical: 12,
     overflow: 'hidden',
   },
-  progressBarFill: {
-    height: 12,
-    borderRadius: 8,
+  dailyChallengeGradient: {
+    width: '100%',
   },
-  progressText: {
-    color: '#2E7D32',
-    fontSize: 14,
+  dailyChallengeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dailyChallengeTitle: {
+    fontWeight: '700',
+    color: '#2E7D32', 
+    marginBottom: 4,
+  },
+  dailyChallengeText: {
+    color: '#8D6E63', 
+    fontWeight: '500',
+  },
+  quickLinksRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  quickLinkButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLinkIconWrap: {
+    backgroundColor: '#F5F5DC', 
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginBottom: 8,
+  },
+  quickLinkLabel: {
+    color: '#2E7D32', 
     fontWeight: '600',
     textAlign: 'center',
   },
-  badgesContainer: {
-    marginBottom: 24,
-    width: '100%',
-    paddingHorizontal: 20,
-    maxWidth: 900,
-    alignSelf: 'center',
-  },
-  badgesSectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1B5E20',
-    marginBottom: 20,
-    textAlign: 'left',
-    paddingLeft: 4,
-  },
-  badgesScrollContent: {
-    paddingHorizontal: 16,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 20,
-  },
-  badgeCircle: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 80,
-    height: 100,
-    borderRadius: 16,
-    marginHorizontal: 8,
-    backgroundColor: '#e0f7fa',
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  badgeLocked: {
-    backgroundColor: '#f0f0f0',
-  },
-  badgeGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  badgeLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: 2,
-  },
-  leaderboardPreview: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#43e97b',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
   leaderboardGradient: {
-    borderRadius: 16,
-    padding: 8,
-  },
-  leaderboardSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1B5E20',
-    marginBottom: 10,
+    width: '100%',
   },
   leaderboardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    paddingVertical: 8,
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8F5E9', 
   },
   leaderboardPosition: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 8,
-    minWidth: 40,
-    justifyContent: 'center',
+    gap: 8,
   },
   leaderboardRank: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#888',
-    marginLeft: 4,
+    color: '#2E7D32', 
+    fontWeight: '600',
   },
   leaderboardName: {
     flex: 1,
-    fontWeight: 'bold',
-    color: '#222',
-    fontSize: 14,
-    marginRight: 8,
+    color: '#8D6E63', 
+    fontWeight: '500',
   },
   leaderboardPointsContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginLeft: 8,
+    alignItems: 'center',
+    gap: 4,
   },
   leaderboardPoints: {
-    color: '#11998e',
-    fontWeight: 'bold',
-    fontSize: 15,
+    color: '#4CAF50', 
+    fontWeight: '700',
   },
   leaderboardPointsLabel: {
-    color: '#888',
-    fontSize: 12,
-    marginLeft: 2,
+    color: '#8D6E63', 
+    fontWeight: '500',
+  },
+  seeAllText: {
+    color: '#4CAF50', 
     fontWeight: '600',
   },
-  discoverCardGradient: {
-    borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
-  },
-  discoverIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-    elevation: 2,
+  rewardCard: {
+    backgroundColor: '#F5F5DC', 
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
+    alignItems: 'center',
   },
-  discoverText: {
-    fontSize: 14,
+  rewardImage: {
+    resizeMode: 'contain',
+  },
+  rewardName: {
+    color: '#2E7D32', 
     fontWeight: '600',
-    color: '#333',
     textAlign: 'center',
   },
-  discoverTextTablet: {
-    fontSize: 16,
+  rewardCostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rewardCost: {
+    color: '#4CAF50', 
+    fontWeight: '600',
   },
   discoverGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 16,
-  },
-  discoverGridTablet: {
-    gap: 24,
   },
   discoverCard: {
-    width: '47%',
-    borderRadius: 16,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    marginBottom: 16,
   },
-  discoverCardTablet: {
-    width: '23%',
+  discoverCardGradient: {
+    alignItems: 'center',
   },
-  bottomSpacing: {
-    height: 40,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#1B5E20',
+  discoverIconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    zIndex: 10,
   },
-  quickActionsContainer: {
-    position: 'absolute',
-    bottom: 100,
-    right: 30,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    zIndex: 9,
+  discoverText: {
+    color: '#2E7D32', 
+    fontWeight: '600',
+    textAlign: 'center',
   },
   quickActionsOverlay: {
     position: 'absolute',
@@ -1154,141 +884,45 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    zIndex: 8,
+    backgroundColor: 'rgba(46, 125, 50, 0.3)', 
   },
   quickActionsBackground: {
     flex: 1,
   },
+  quickActionsContainer: {
+    position: 'absolute',
+    backgroundColor: '#F5F5DC', 
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
   quickActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8F5E9', 
   },
   quickActionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#4CAF50', 
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
   quickActionLabel: {
-    fontSize: 16,
+    color: '#2E7D32', 
     fontWeight: '600',
-    color: '#333',
   },
-  simpleTopNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 24,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    minHeight: 72,
-  },
-  simpleTopNavLeft: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  simpleTopNavGreeting: {
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '500',
-  },
-  simpleTopNavUserName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#222',
-    marginTop: 2,
-  },
-  simpleTopNavAvatarTouchable: {
-    borderRadius: 20,
-    padding: 2,
-  },
-  simpleTopNavAvatarWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#bbb',
+  fab: {
+    position: 'absolute',
+    backgroundColor: '#4CAF50', 
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-  },
-  simpleTopNavAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#bbb',
-  },
-  seeAllText: {
-    color: '#00C896',
-    fontWeight: '600',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  // New styles for Daily Challenge and Quick Links
-  dailyChallengeCard: {
-    borderRadius: 20,
-    elevation: 4,
-    shadowColor: '#FF6B35',
+    elevation: 6,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    marginBottom: 20,
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  dailyChallengeGradient: {
-    borderRadius: 20,
-    padding: 20,
-  },
-  dailyChallengeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dailyChallengeTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FF6B35',
-    marginBottom: 2,
-  },
-  dailyChallengeText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
-  },
-  quickLinksRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 20,
-    maxWidth: 600,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  quickLinkButton: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  quickLinkIconWrap: {
-    backgroundColor: '#E8F5E8',
-    borderRadius: 18,
-    padding: 12,
-    marginBottom: 8,
-  },
-  quickLinkLabel: {
-    fontSize: 13,
-    color: '#1B5E20',
-    fontWeight: '700',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 });
-
 export default HomeScreen;

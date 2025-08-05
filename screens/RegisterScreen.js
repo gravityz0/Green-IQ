@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import {
@@ -21,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
@@ -42,6 +44,7 @@ const RegisterScreen = ({ navigation, route }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Animation
   const formAnim = useRef(new Animated.Value(0)).current;
@@ -136,6 +139,70 @@ const RegisterScreen = ({ navigation, route }) => {
     return 'Select Collection Point Location';
   };
 
+  // Function to get current location directly
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Location Permission Required',
+          'Please enable location permissions to use this feature.',
+          [{ text: 'OK' }]
+        );
+        setIsLoadingLocation(false);
+        return;
+      }
+
+      // Get current position
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 10000,
+      });
+
+      const { latitude, longitude } = location.coords;
+      
+      if (userType === 'citizen') {
+        setLocation('Current Location');
+      } else {
+        setCompanyLocation({
+          name: 'Current Location',
+          district: 'Current Location',
+          sector: 'Current Location',
+          coordinates: {
+            latitude: latitude,
+            longitude: longitude
+          },
+          types: ['Custom Location'],
+          hours: '24/7',
+          contact: 'N/A',
+          capacity: 'Custom',
+          status: 'Active',
+          description: 'Your current location',
+          manager: 'Self'
+        });
+      }
+
+      Toast.show({
+        type: 'success',
+        text1: 'Location Set',
+        text2: 'Your current location has been set successfully'
+      });
+
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert(
+        'Location Error',
+        'Unable to get your current location. Please try again or select a location manually.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
   // Function to navigate to location selection with current form state
   const navigateToLocationSelection = () => {
     const currentFormState = {
@@ -184,7 +251,6 @@ const RegisterScreen = ({ navigation, route }) => {
     setIsLoading(true);
     try {
       if (userType === "citizen") {
-        console.log(location)
         const response = await axios.post(
           "https://trash2treasure-backend.onrender.com/register",
           {
@@ -195,7 +261,6 @@ const RegisterScreen = ({ navigation, route }) => {
             phoneNumber,
             userType,
             referralUsed: referralCode,
-            location: companyLocation.sector
           }
         );
         Toast.show({
@@ -250,8 +315,6 @@ const RegisterScreen = ({ navigation, route }) => {
         text1: 'Registration failed',
         text2: error?.response?.data?.message || 'Registration failed.'
       });
-
-      console.log(error?.response?.data?.message)
     } finally {
       setIsLoading(false);
     }
@@ -372,23 +435,55 @@ const RegisterScreen = ({ navigation, route }) => {
 
                   {/* Location/Address Fields */}
                   {userType === 'citizen' ? (
-                    <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
-                      <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                      <Text style={[styles.input, styles.locationText, !location && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{location || 'Select Your Location'}</Text>
-                      <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
-                    </TouchableOpacity>
-                  ) : (
-                    <>
-                        <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
+                    <View style={styles.locationSection}>
+                      <View style={styles.locationRow}>
+                        <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.locationInputContainer, isSmallScreen && styles.locationInputContainerSmall, isTablet && styles.locationInputContainerTablet]}>
                           <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
-                          <Text style={[styles.input, styles.locationText, !companyLocation && styles.placeholderText, isSmallScreen && styles.inputSmall, isTablet && styles.inputTablet]}>{getCompanyLocationDisplay()}</Text>
-                          {typeof companyLocation === 'object' && companyLocation.coordinates && (
-                            <View style={styles.coordinatesIndicator}>
-                              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                            </View>
-                          )}
+                          <Text style={[styles.locationInputText, !location && styles.placeholderText, isSmallScreen && styles.locationInputTextSmall, isTablet && styles.locationInputTextTablet]}>{location || 'Select Your Location'}</Text>
                           <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
                         </TouchableOpacity>
+                        <TouchableOpacity 
+                          onPress={getCurrentLocation} 
+                          disabled={isLoadingLocation}
+                          style={[styles.currentLocationButton, isSmallScreen && styles.currentLocationButtonSmall, isTablet && styles.currentLocationButtonTablet]}
+                        >
+                          {isLoadingLocation ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Ionicons name="locate" size={isTablet ? 24 : isSmallScreen ? 18 : 20} color="#fff" />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={styles.locationHint}>Tap the field to select from map or use the location button for current GPS</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <View style={styles.locationSection}>
+                        <View style={styles.locationRow}>
+                          <TouchableOpacity onPress={navigateToLocationSelection} style={[styles.locationInputContainer, isSmallScreen && styles.locationInputContainerSmall, isTablet && styles.locationInputContainerTablet]}>
+                            <Ionicons name="location-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
+                            <Text style={[styles.locationInputText, !companyLocation && styles.placeholderText, isSmallScreen && styles.locationInputTextSmall, isTablet && styles.locationInputTextTablet]}>{getCompanyLocationDisplay()}</Text>
+                            {typeof companyLocation === 'object' && companyLocation.coordinates && (
+                              <View style={styles.coordinatesIndicator}>
+                                <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                              </View>
+                            )}
+                            <Ionicons name="chevron-forward" size={isTablet ? 28 : 22} color="#11998e" />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={getCurrentLocation} 
+                            disabled={isLoadingLocation}
+                            style={[styles.currentLocationButton, isSmallScreen && styles.currentLocationButtonSmall, isTablet && styles.currentLocationButtonTablet]}
+                          >
+                            {isLoadingLocation ? (
+                              <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                              <Ionicons name="locate" size={isTablet ? 24 : isSmallScreen ? 18 : 20} color="#fff" />
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.locationHint}>Tap the field to select from map or use the location button for current GPS</Text>
+                      </View>
                       
                       <View style={[styles.inputContainer, isSmallScreen && styles.inputContainerSmall, isTablet && styles.inputContainerTablet]}>
                         <Ionicons name="person-outline" size={isTablet ? 28 : isSmallScreen ? 20 : 22} color="#11998e" style={styles.inputIcon} />
@@ -868,6 +963,92 @@ const styles = StyleSheet.create({
     padding: 4,
     borderWidth: 1,
     borderColor: '#4CAF50',
+  },
+  locationSection: {
+    marginBottom: 20,
+  },
+  locationLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  locationInputContainerSmall: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  locationInputContainerTablet: {
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderRadius: 16,
+  },
+  locationInputText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
+    marginLeft: 8,
+  },
+  locationInputTextSmall: {
+    fontSize: 14,
+  },
+  locationInputTextTablet: {
+    fontSize: 17,
+  },
+  locationHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
+  currentLocationButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#11998e',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    borderWidth: 2,
+    borderColor: '#0d9488',
+  },
+  currentLocationButtonSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  currentLocationButtonTablet: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
 });
 
