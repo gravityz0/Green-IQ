@@ -12,6 +12,7 @@ import ProductScanScreen from '../screens/ProductScanScreen';
 import ScanScreen from '../screens/ScanScreen';
 import ClassificationResultScreen from '../screens/ClassificationResultScreen';
 import { Text, View } from 'react-native';
+import CompanyHome from '../screens/CompanyPortal';
 
 const Stack = createStackNavigator();
 

@@ -88,10 +88,18 @@ const LoginScreen = ({ navigation }) => {
         password
       });
       
+      console.log('Full login response:', JSON.stringify(response.data, null, 2));
+      
+      // Determine user role from multiple possible field names
+      const userData = response.data.user || response.data;
+      const userRole = userData.userRole || userData.role || userData.userType || 'citizen';
+      
+      console.log('User data:', userData);
+      console.log('Determined user role:', userRole);
+      
       // Set user data and type
-      setUser(response.data.user);
-      setUserType(response.data.user.userRole || 'citizen');
-      console.log(response.data.user)
+      setUser(userData);
+      setUserType(userRole);
       
       Toast.show({
         type: 'success',
@@ -101,12 +109,50 @@ const LoginScreen = ({ navigation }) => {
       });
       
       // Navigate based on user type
-      if (response.data.user.userRole === "company") {
-        navigation.navigate('CompanyHome');
+      if (userRole === "company" || userRole === "Company") {
+        console.log('Navigating to CompanyHome for company user...');
+        // Add a small delay to ensure state is set
+        setTimeout(() => {
+          try {
+            navigation.navigate('CompanyHome');
+          } catch (navError) {
+            console.log('Navigation error:', navError);
+            // Fallback navigation
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'CompanyHome' }],
+            });
+          }
+        }, 100);
+        
+        // Fallback navigation after 3 seconds if screen doesn't appear
+        setTimeout(() => {
+          console.log('Fallback: Checking if navigation worked...');
+          // Force navigation again
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'CompanyHome' }],
+          });
+        }, 3000);
       } else {
-        navigation.navigate('Home');
+        console.log('Navigating to Home for citizen user...');
+        // Add a small delay to ensure state is set
+        setTimeout(() => {
+          try {
+            navigation.navigate('Home');
+          } catch (navError) {
+            console.log('Navigation error:', navError);
+            // Fallback navigation
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+          }
+        }, 100);
       }
     } catch (error) {
+      console.log('Login error:', error);
+      console.log('Error response:', error?.response?.data);
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
