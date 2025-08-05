@@ -1,5 +1,5 @@
 import 'react-native-url-polyfill/auto';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -33,6 +33,17 @@ import SafeZonesMap from './screens/SafeZonesMap';
 import ScanChoiceScreen from './screens/ScanChoiceScreen';
 import ProductScanScreen from './screens/ProductScanScreen';
 import ClassificationResultScreen from './screens/ClassificationResultScreen';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -186,17 +197,19 @@ function AppTabs() {
         tabBarStyle: route.name === 'Chat'
           ? { display: 'none' }
           : {
-              backgroundColor: '#ffffff',
-              borderTopWidth: 0,
-              elevation: 10,
-              shadowOpacity: 0.1,
-            },
+            backgroundColor: '#ffffff',
+            borderTopWidth: 0,
+            elevation: 10,
+            shadowOpacity: 0.1,
+          },
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Map" component={SafeZonesMap} options={{ tabBarLabel: 'Safe Zones', tabBarIcon: ({ color, size, focused }) => (
-        <Ionicons name={focused ? 'shield' : 'shield-outline'} size={size} color={color} />
-      ) }} />
+      <Tab.Screen name="Map" component={SafeZonesMap} options={{
+        tabBarLabel: 'Safe Zones', tabBarIcon: ({ color, size, focused }) => (
+          <Ionicons name={focused ? 'shield' : 'shield-outline'} size={size} color={color} />
+        )
+      }} />
       <Tab.Screen
         name="Scan"
         component={ScanScreen} // This component is a placeholder; the press action is overridden.
@@ -219,7 +232,7 @@ function AppTabs() {
 // Company portal with bottom tab bar
 function CompanyTabs() {
   console.log('CompanyTabs component rendered');
-  
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => {
@@ -280,7 +293,7 @@ function App() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={SignupScreen} />
           <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
-          
+
           {/* Main app screens (with tab bar) */}
           <Stack.Screen name="Home" component={AppTabs} />
           <Stack.Screen name="CompanyHome" component={CompanyTabs} />

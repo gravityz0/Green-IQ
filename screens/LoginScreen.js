@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   View,
@@ -19,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '../context/UserContext';
+import { registerForPushNotificationsAsync } from '../services/notification';
 
 const { width, height } = Dimensions.get('window');
 
@@ -87,6 +89,12 @@ const LoginScreen = ({ navigation }) => {
         email,
         password
       });
+      const { token, user } = response.data;
+
+      // Save to local storage
+      await AsyncStorage.setItem('token', token);
+      await registerForPushNotificationsAsync(user._id)
+      await AsyncStorage.setItem('userId', user._id);
       
       console.log('Full login response:', JSON.stringify(response.data, null, 2));
       
