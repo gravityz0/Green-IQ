@@ -35,6 +35,7 @@ import ProductScanScreen from './screens/ProductScanScreen';
 import ClassificationResultScreen from './screens/ClassificationResultScreen';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import useNotificationListener from './hooks/useNotificationListener';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -279,6 +280,7 @@ function CompanyTabs() {
 
 // The complete app navigation flow
 function App() {
+  useNotificationListener();
   return (
     <UserProvider>
       <NavigationContainer>
