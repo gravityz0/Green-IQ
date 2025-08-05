@@ -13,6 +13,7 @@ import ScanScreen from '../screens/ScanScreen';
 import ClassificationResultScreen from '../screens/ClassificationResultScreen';
 import { Text, View } from 'react-native';
 import CompanyHome from '../screens/CompanyPortal';
+import NearByCompanies from '../screens/NearByCompanies';
 
 const Stack = createStackNavigator();
 
@@ -64,6 +65,14 @@ export default function AppNavigator() {
         component={SafeZoneAlerts} 
         options={{ 
           title: 'Climate Alerts',
+          headerShown: false,
+        }} 
+      />
+      <Stack.Screen 
+        name="NearByCompanies" 
+        component={NearByCompanies} 
+        options={{ 
+          title: 'Near By Companies',
           headerShown: false,
         }} 
       />

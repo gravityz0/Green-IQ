@@ -33,7 +33,7 @@ import SafeZonesMap from './screens/SafeZonesMap';
 import ScanChoiceScreen from './screens/ScanChoiceScreen';
 import ProductScanScreen from './screens/ProductScanScreen';
 import ClassificationResultScreen from './screens/ClassificationResultScreen';
-
+import NearByCompanies from './screens/NearByCompanies';
 // Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
   const tips = [
@@ -172,7 +172,7 @@ function AppTabs() {
           } else if (route.name === 'RewardsTab') {
             iconName = focused ? 'gift' : 'gift-outline';
           } else if (route.name === 'Chat') {
-            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+            iconName = focused ? 'business' : 'business-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -183,14 +183,12 @@ function AppTabs() {
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
         tabBarLabelPosition: 'below-icon', // <-- force vertical layout
-        tabBarStyle: route.name === 'Chat'
-          ? { display: 'none' }
-          : {
-              backgroundColor: '#ffffff',
-              borderTopWidth: 0,
-              elevation: 10,
-              shadowOpacity: 0.1,
-            },
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowOpacity: 0.1,
+        },
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
@@ -210,7 +208,7 @@ function AppTabs() {
         options={{ tabBarLabel: 'Scan' }}
       />
       <Tab.Screen name="RewardsTab" component={Rewards} options={{ tabBarLabel: 'Rewards' }} />
-      <Tab.Screen name="Chat" component={CollectionPoints} options={{ tabBarLabel: 'Community' }} />
+      <Tab.Screen name="Chat" component={CollectionPoints} options={{ tabBarLabel: 'Nearby Companies' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -218,44 +216,39 @@ function AppTabs() {
 
 // Company portal with bottom tab bar
 function CompanyTabs() {
-  console.log('CompanyTabs component rendered');
-  
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => {
-        console.log('Tab screen options for route:', route.name);
-        return {
-          headerShown: false,
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-            if (route.name === 'CompanyPortal') {
-              iconName = focused ? 'business' : 'business-outline';
-            } else if (route.name === 'CollectionMgmt') {
-              iconName = focused ? 'list' : 'list-outline';
-            } else if (route.name === 'Analytics') {
-              iconName = focused ? 'analytics' : 'analytics-outline';
-            } else if (route.name === 'Employees') {
-              iconName = focused ? 'people' : 'people-outline';
-            } else if (route.name === 'CompanyProfile') {
-              iconName = focused ? 'person' : 'person-outline';
-            }
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#2d6a4f',
-          tabBarInactiveTintColor: 'gray',
-          tabBarShowLabel: true,
-          tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
-          tabBarLabelPosition: 'below-icon',
-          tabBarStyle: {
-            backgroundColor: '#ffffff',
-            borderTopWidth: 0,
-            elevation: 10,
-            shadowOpacity: 0.1,
-          },
-        };
-      }}
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'CompanyHome') {
+            iconName = focused ? 'business' : 'business-outline';
+          } else if (route.name === 'CollectionMgmt') {
+            iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'Analytics') {
+            iconName = focused ? 'analytics' : 'analytics-outline';
+          } else if (route.name === 'Employees') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'CompanyProfile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#2d6a4f',
+        tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+        tabBarLabelPosition: 'below-icon',
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowOpacity: 0.1,
+        },
+      })}
     >
-      <Tab.Screen name="CompanyPortal" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
+      <Tab.Screen name="CompanyHome" component={CompanyPortal} options={{ tabBarLabel: 'Portal' }} />
       <Tab.Screen name="CollectionMgmt" component={CollectionManagement} options={{ tabBarLabel: 'Collection' }} />
       <Tab.Screen name="Analytics" component={Dashboard} options={{ tabBarLabel: 'Analytics' }} />
       <Tab.Screen name="Employees" component={EmployeeManagement} options={{ tabBarLabel: 'Employees' }} />
@@ -303,7 +296,7 @@ function App() {
           <Stack.Screen name="ClassificationResult" component={ClassificationResultScreen} />
           <Stack.Screen name="EmployeeManagement" component={EmployeeManagement} />
           <Stack.Screen name="CollectionManagement" component={CollectionManagement} />
-
+          <Stack.Screen name="NearByCompanies" component={NearByCompanies} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

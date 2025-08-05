@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,55 +8,223 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  Alert,
+  ActivityIndicator,
+  TextInput,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { wastePoints } from './CollectionPoints';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
 const LocationSelectionScreen = ({ navigation, route }) => {
   const [selectedPoint, setSelectedPoint] = useState(null);
-
-  // Get the current form state from route params
-  const currentFormState = route?.params || {};
-
-  const seoulRegion = {
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPoints, setFilteredPoints] = useState(wastePoints);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [region, setRegion] = useState({
     latitude: 37.5665,
     longitude: 126.9780,
     latitudeDelta: 0.3,
     longitudeDelta: 0.3,
+  });
+
+  // Get the current form state from route params
+  const currentFormState = route?.params || {};
+  const mapRef = useRef(null);
+
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+      
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Location Permission Required',
+          'Please enable location permissions to use this feature.',
+          [{ text: 'OK' }]
+        );
+        setIsLoadingLocation(false);
+        return;
+      }
+
+      // Get current position
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 10000,
+      });
+
+      const { latitude, longitude } = location.coords;
+      
+      // Update region to center on current location
+      const newRegion = {
+        latitude,
+        longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      
+      setRegion(newRegion);
+      setCurrentLocation({ latitude, longitude });
+      
+      // Animate map to current location
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+
+      // Find nearest waste point
+      const nearestPoint = findNearestWastePoint(latitude, longitude);
+      if (nearestPoint) {
+        setSelectedPoint(nearestPoint);
+      }
+
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert(
+        'Location Error',
+        'Unable to get your current location. Please try again or select a location manually.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  const findNearestWastePoint = (lat, lng) => {
+    let nearestPoint = null;
+    let shortestDistance = Infinity;
+
+    wastePoints.forEach(point => {
+      const distance = calculateDistance(
+        lat, lng,
+        point.coords.latitude, point.coords.longitude
+      );
+      
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestPoint = point;
+      }
+    });
+
+    return nearestPoint;
+  };
+
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const clearSelection = () => {
+    setSelectedPoint(null);
+    setCurrentLocation(null);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setFilteredPoints(wastePoints);
+      setShowSearchResults(false);
+    } else {
+      const filtered = wastePoints.filter(point => 
+        point.name.toLowerCase().includes(query.toLowerCase()) ||
+        point.district.toLowerCase().includes(query.toLowerCase()) ||
+        point.sector.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredPoints(filtered);
+      setShowSearchResults(true);
+    }
+  };
+
+  const selectPointFromSearch = (point) => {
+    setSelectedPoint(point);
+    setSearchQuery(point.name);
+    setShowSearchResults(false);
+    
+    // Animate map to selected point
+    const newRegion = {
+      latitude: point.coords.latitude,
+      longitude: point.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    };
+    setRegion(newRegion);
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(newRegion, 1000);
+    }
+  };
+
+  const handleMapPress = (event) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setCurrentLocation({ latitude, longitude });
+    setSelectedPoint(null);
   };
 
   const confirmSelection = () => {
-    if (!selectedPoint) return;
+    if (!selectedPoint && !currentLocation) return;
     
     // Determine if this is for company registration
     const isCompanyRegistration = currentFormState.userType === 'company';
     
     // Create location data based on user type
     let locationData;
-    if (isCompanyRegistration) {
-      // For companies: send JSON object with coordinates and location info
-      locationData = {
-        name: selectedPoint.name,
-        district: selectedPoint.district,
-        sector: selectedPoint.sector,
-        coordinates: {
-          latitude: selectedPoint.coords.latitude,
-          longitude: selectedPoint.coords.longitude
-        },
-        types: selectedPoint.types,
-        hours: selectedPoint.hours,
-        contact: selectedPoint.contact,
-        capacity: selectedPoint.capacity,
-        status: selectedPoint.status,
-        description: selectedPoint.description,
-        manager: selectedPoint.manager
-      };
-    } else {
-      // For citizens: send just the location name (backward compatibility)
-      locationData = selectedPoint.name;
+    
+    if (currentLocation && !selectedPoint) {
+      // User wants to use their current location
+      if (isCompanyRegistration) {
+        locationData = {
+          name: 'Current Location',
+          district: 'Current Location',
+          sector: 'Current Location',
+          coordinates: {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude
+          },
+          types: ['Custom Location'],
+          hours: '24/7',
+          contact: 'N/A',
+          capacity: 'Custom',
+          status: 'Active',
+          description: 'Your current location',
+          manager: 'Self'
+        };
+      } else {
+        locationData = 'Current Location';
+      }
+    } else if (selectedPoint) {
+      // User selected a waste point
+      if (isCompanyRegistration) {
+        locationData = {
+          name: selectedPoint.name,
+          district: selectedPoint.district,
+          sector: selectedPoint.sector,
+          coordinates: {
+            latitude: selectedPoint.coords.latitude,
+            longitude: selectedPoint.coords.longitude
+          },
+          types: selectedPoint.types,
+          hours: selectedPoint.hours,
+          contact: selectedPoint.contact,
+          capacity: selectedPoint.capacity,
+          status: selectedPoint.status,
+          description: selectedPoint.description,
+          manager: selectedPoint.manager
+        };
+      } else {
+        locationData = selectedPoint.name;
+      }
     }
     
     // Return to RegisterScreen with the selected location and all previous form data
@@ -92,13 +260,56 @@ const LocationSelectionScreen = ({ navigation, route }) => {
           {currentFormState.userType === 'company' ? 'Select Collection Point' : 'Select Your Location'}
         </Text>
       </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search for collection points..."
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={handleSearch}
+            onFocus={() => setShowSearchResults(true)}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => handleSearch('')} style={styles.clearSearchButton}>
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {/* Search Results */}
+        {showSearchResults && filteredPoints.length > 0 && (
+          <ScrollView style={styles.searchResults} showsVerticalScrollIndicator={false}>
+            {filteredPoints.map((point) => (
+              <TouchableOpacity
+                key={point.id}
+                style={styles.searchResultItem}
+                onPress={() => selectPointFromSearch(point)}
+              >
+                <Ionicons name="location" size={16} color="#11998e" />
+                <View style={styles.searchResultText}>
+                  <Text style={styles.searchResultName}>{point.name}</Text>
+                  <Text style={styles.searchResultDetails}>{point.district}, {point.sector}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+
       <View style={styles.mapContainer}>
         <MapView
+          ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={styles.map}
-          initialRegion={seoulRegion}
+          initialRegion={region}
+          region={region}
+          onPress={handleMapPress}
         >
-          {wastePoints.map((point) => (
+          {filteredPoints.map((point) => (
             <Marker
               key={point.id}
               coordinate={point.coords}
@@ -116,35 +327,108 @@ const LocationSelectionScreen = ({ navigation, route }) => {
               </View>
             </Marker>
           ))}
-        </MapView>
-      </View>
-      {selectedPoint && (
-        <View style={styles.selectionContainer}>
-          <Text style={styles.selectedLocationName}>{selectedPoint.name}</Text>
-          <Text style={styles.selectedLocationDetails}>
-            {selectedPoint.district}, {selectedPoint.sector}
-          </Text>
-          {currentFormState.userType === 'company' && (
-            <View style={styles.coordinatesContainer}>
-              <Text style={styles.coordinatesText}>
-                📍 Coordinates: {selectedPoint.coords.latitude.toFixed(6)}, {selectedPoint.coords.longitude.toFixed(6)}
-              </Text>
-              <Text style={styles.capacityText}>
-                📊 Capacity: {selectedPoint.capacity} | Status: {selectedPoint.status}
-              </Text>
-              <Text style={styles.typesText}>
-                🗂️ Types: {selectedPoint.types.join(', ')}
-              </Text>
-            </View>
+          
+          {/* Current Location Marker */}
+          {currentLocation && (
+            <Marker
+              coordinate={currentLocation}
+              title="Your Location"
+              description="You are here"
+            >
+              <View style={styles.currentLocationMarker}>
+                <Ionicons name="location" size={24} color="#2d6a4f" />
+              </View>
+            </Marker>
           )}
+        </MapView>
+        
+        {/* Map Controls */}
+        <View style={styles.mapControls}>
           <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={confirmSelection}
+            style={styles.currentLocationButton}
+            onPress={getCurrentLocation}
+            disabled={isLoadingLocation}
           >
-            <Text style={styles.confirmButtonText}>
-              {currentFormState.userType === 'company' ? 'Select This Collection Point' : 'Select This Location'}
-            </Text>
+            {isLoadingLocation ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="locate" size={24} color="#fff" />
+            )}
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.mapInfoButton}
+            onPress={() => Alert.alert(
+              'Map Instructions',
+              '• Tap anywhere on the map to set your current location\n• Tap on collection point markers to select them\n• Use the search bar to find specific locations\n• Use the GPS button to get your exact location'
+            )}
+          >
+            <Ionicons name="information-circle" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {(selectedPoint || currentLocation) && (
+        <View style={styles.selectionContainer}>
+          {selectedPoint ? (
+            <>
+              <Text style={styles.selectedLocationName}>{selectedPoint.name}</Text>
+              <Text style={styles.selectedLocationDetails}>
+                {selectedPoint.district}, {selectedPoint.sector}
+              </Text>
+              {currentFormState.userType === 'company' && (
+                <View style={styles.coordinatesContainer}>
+                  <Text style={styles.coordinatesText}>
+                    📍 Coordinates: {selectedPoint.coords.latitude.toFixed(6)}, {selectedPoint.coords.longitude.toFixed(6)}
+                  </Text>
+                  <Text style={styles.capacityText}>
+                    📊 Capacity: {selectedPoint.capacity} | Status: {selectedPoint.status}
+                  </Text>
+                  <Text style={styles.typesText}>
+                    🗂️ Types: {selectedPoint.types.join(', ')}
+                  </Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.selectedLocationName}>Current Location</Text>
+              <Text style={styles.selectedLocationDetails}>
+                Your current GPS location
+              </Text>
+              {currentFormState.userType === 'company' && currentLocation && (
+                <View style={styles.coordinatesContainer}>
+                  <Text style={styles.coordinatesText}>
+                    📍 Coordinates: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
+                  </Text>
+                  <Text style={styles.capacityText}>
+                    📊 Type: Custom Location | Status: Active
+                  </Text>
+                  <Text style={styles.typesText}>
+                    🗂️ Description: Your current location
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={clearSelection}
+            >
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={confirmSelection}
+            >
+              <Text style={styles.confirmButtonText}>
+                {currentFormState.userType === 'company' 
+                  ? (selectedPoint ? 'Select This Collection Point' : 'Use Current Location')
+                  : (selectedPoint ? 'Select This Location' : 'Use Current Location')
+                }
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -222,11 +506,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 15,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  clearButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    flex: 1,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   confirmButton: {
     backgroundColor: '#fff',
     paddingVertical: 15,
+    paddingHorizontal: 20,
     borderRadius: 12,
     alignItems: 'center',
+    flex: 2,
   },
   confirmButtonText: {
     color: '#2d6a4f',
@@ -252,6 +555,133 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     marginTop: 5,
+  },
+  searchContainer: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    right: 20,
+    zIndex: 10,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  clearSearchButton: {
+    marginLeft: 8,
+  },
+  searchResults: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginTop: 8,
+    maxHeight: 200,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  searchResultText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  searchResultName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  searchResultDetails: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  mapControls: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'column',
+    gap: 12,
+  },
+  currentLocationButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#2d6a4f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  mapInfoButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#11998e',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  currentLocationMarker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#2d6a4f',
+    borderWidth: 3,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
 
