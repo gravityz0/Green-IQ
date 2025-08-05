@@ -245,7 +245,6 @@ const RegisterScreen = ({ navigation, route }) => {
         setTimeout(() => navigation.navigate("Login"), 1500);
       }        
     } catch (error) {
-      console.log(error)
       Toast.show({
         type: 'error',
         text1: 'Registration failed',
