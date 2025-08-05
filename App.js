@@ -33,7 +33,6 @@ import SafeZonesMap from './screens/SafeZonesMap';
 import ScanChoiceScreen from './screens/ScanChoiceScreen';
 import ProductScanScreen from './screens/ProductScanScreen';
 import ClassificationResultScreen from './screens/ClassificationResultScreen';
-<<<<<<< HEAD
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import useNotificationListener from './hooks/useNotificationListener';
@@ -45,12 +44,8 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-
-=======
 import NearByCompanies from './screens/NearByCompanies';
->>>>>>> recovery_branch
-// Placeholder Challenges screen
+//  Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
   const tips = [
     {
@@ -199,23 +194,12 @@ function AppTabs() {
         tabBarShowLabel: true,
         tabBarLabelStyle: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
         tabBarLabelPosition: 'below-icon', // <-- force vertical layout
-<<<<<<< HEAD
-        tabBarStyle: route.name === 'Chat'
-          ? { display: 'none' }
-          : {
-            backgroundColor: '#ffffff',
-            borderTopWidth: 0,
-            elevation: 10,
-            shadowOpacity: 0.1,
-          },
-=======
         tabBarStyle: {
           backgroundColor: '#ffffff',
           borderTopWidth: 0,
           elevation: 10,
           shadowOpacity: 0.1,
         },
->>>>>>> recovery_branch
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
@@ -245,11 +229,6 @@ function AppTabs() {
 
 // Company portal with bottom tab bar
 function CompanyTabs() {
-<<<<<<< HEAD
-  console.log('CompanyTabs component rendered');
-
-=======
->>>>>>> recovery_branch
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

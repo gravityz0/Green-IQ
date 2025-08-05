@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -15,61 +15,7 @@ import {
 import { MapPin, Phone, Globe, Star, Clock, Filter, Search, Heart } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
-
-const companies = [
-  {
-    id: '1',
-    name: 'Green Waste Solutions',
-    address: '123 Eco Street, Kigali',
-    phone: '+250788123456',
-    website: 'https://greenwaste.rw',
-    rating: 4.8,
-    distance: '0.5 km',
-    openHours: '8:00 AM - 6:00 PM',
-    services: ['Paper', 'Plastic', 'Metal'],
-    description: 'Leading recycling company with 10+ years of experience in sustainable waste management.',
-    isFavorite: false,
-  },
-  {
-    id: '2',
-    name: 'RecycleTech Ltd',
-    address: '456 Tech Park, Kacyiru',
-    phone: '+250788654321',
-    website: 'https://recycletech.rw',
-    rating: 4.5,
-    distance: '1.2 km',
-    openHours: '7:00 AM - 7:00 PM',
-    services: ['Electronics', 'Batteries', 'Glass'],
-    description: 'Specialized in electronic waste recycling and hazardous material disposal.',
-    isFavorite: false,
-  },
-  {
-    id: '3',
-    name: 'EcoCollect Rwanda',
-    address: '789 Clean Ave, Remera',
-    phone: '+250788111222',
-    website: 'https://ecocollect.rw',
-    rating: 4.9,
-    distance: '2.1 km',
-    openHours: '9:00 AM - 5:00 PM',
-    services: ['Organic', 'Paper', 'Plastic'],
-    description: 'Community-focused recycling service with pickup and drop-off options.',
-    isFavorite: false,
-  },
-  {
-    id: '4',
-    name: 'Clean Earth Pro',
-    address: '321 Green Road, Nyarutarama',
-    phone: '+250788333444',
-    website: 'https://cleanearthpro.rw',
-    rating: 4.3,
-    distance: '3.5 km',
-    openHours: '8:30 AM - 6:30 PM',
-    services: ['All Types', 'Bulk Waste'],
-    description: 'Comprehensive waste management solutions for residential and commercial clients.',
-    isFavorite: false,
-  },
-];
+import axios from 'axios';
 
 const CompanyCard = ({ company, onToggleFavorite, onViewDetails }) => {
   const [scaleValue] = useState(new Animated.Value(1));
@@ -92,18 +38,17 @@ const CompanyCard = ({ company, onToggleFavorite, onViewDetails }) => {
   const handleCall = () => {
     Alert.alert(
       "Call Company",
-      `Do you want to call ${company.name}?`,
+      `Do you want to call ${company.companyName}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Call", onPress: () => Linking.openURL(`tel:${company.phone}`) }
+        { text: "Call", onPress: () => Linking.openURL(`tel:${company.phoneNumber}`) }
       ]
     );
   };
 
   const handleWebsite = () => {
-    Linking.openURL(company.website).catch(() => {
-      Alert.alert("Error", "Unable to open website");
-    });
+    // Since website is not in the JSON structure, we'll show an alert
+    Alert.alert("Website", "Website information not available for this company");
   };
 
   return (
@@ -117,15 +62,15 @@ const CompanyCard = ({ company, onToggleFavorite, onViewDetails }) => {
       >
         <View style={styles.cardHeader}>
           <View style={styles.nameSection}>
-            <Text style={styles.name}>{company.name}</Text>
+            <Text style={styles.name}>{company.companyName}</Text>
             <View style={styles.ratingContainer}>
               <Star size={14} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.rating}>{company.rating}</Text>
-              <Text style={styles.distance}>• {company.distance}</Text>
+              <Text style={styles.rating}>4.5</Text>
+              <Text style={styles.distance}>• Nearby</Text>
             </View>
           </View>
           <TouchableOpacity 
-            onPress={() => onToggleFavorite(company.id)}
+            onPress={() => onToggleFavorite(company._id)}
             style={styles.favoriteButton}
           >
             <Heart 
@@ -137,21 +82,24 @@ const CompanyCard = ({ company, onToggleFavorite, onViewDetails }) => {
         </View>
 
         <View style={styles.servicesContainer}>
-          {company.services.slice(0, 3).map((service, index) => (
-            <View key={index} style={styles.serviceTag}>
-              <Text style={styles.serviceText}>{service}</Text>
-            </View>
-          ))}
+          <View style={styles.serviceTag}>
+            <Text style={styles.serviceText}>Recycling</Text>
+          </View>
+          <View style={styles.serviceTag}>
+            <Text style={styles.serviceText}>Waste Management</Text>
+          </View>
         </View>
 
         <View style={styles.row}>
           <MapPin size={16} color="#4CAF50" />
-          <Text style={styles.text} numberOfLines={1}>{company.address}</Text>
+          <Text style={styles.text} numberOfLines={1}>
+            {company.companyAddress?.district}, {company.companyAddress?.sector}
+          </Text>
         </View>
 
         <View style={styles.row}>
-          <Clock size={16} color="#4CAF50" />
-          <Text style={styles.text}>{company.openHours}</Text>
+          <Phone size={16} color="#4CAF50" />
+          <Text style={styles.text}>{company.phoneNumber}</Text>
         </View>
 
         <View style={styles.actionContainer}>
@@ -162,7 +110,7 @@ const CompanyCard = ({ company, onToggleFavorite, onViewDetails }) => {
           
           <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={handleWebsite}>
             <Globe size={16} color="#4CAF50" />
-            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Website</Text>
+            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Info</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -182,7 +130,7 @@ const CompanyDetailModal = ({ company, visible, onClose }) => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>{company.name}</Text>
+          <Text style={styles.modalTitle}>{company.companyName}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>×</Text>
           </TouchableOpacity>
@@ -191,20 +139,26 @@ const CompanyDetailModal = ({ company, visible, onClose }) => {
         <View style={styles.modalContent}>
           <View style={styles.modalRating}>
             <Star size={20} color="#FFD700" fill="#FFD700" />
-            <Text style={styles.modalRatingText}>{company.rating} Rating</Text>
-            <Text style={styles.modalDistance}>• {company.distance} away</Text>
+            <Text style={styles.modalRatingText}>4.5 Rating</Text>
+            <Text style={styles.modalDistance}>• Nearby</Text>
           </View>
 
-          <Text style={styles.modalDescription}>{company.description}</Text>
+          <Text style={styles.modalDescription}>
+            Professional recycling and waste management services in {company.companyAddress?.district}, {company.companyAddress?.sector}.
+          </Text>
 
           <View style={styles.modalSection}>
             <Text style={styles.modalSectionTitle}>Services Offered</Text>
             <View style={styles.modalServices}>
-              {company.services.map((service, index) => (
-                <View key={index} style={styles.modalServiceTag}>
-                  <Text style={styles.modalServiceText}>{service}</Text>
-                </View>
-              ))}
+              <View style={styles.modalServiceTag}>
+                <Text style={styles.modalServiceText}>Recycling</Text>
+              </View>
+              <View style={styles.modalServiceTag}>
+                <Text style={styles.modalServiceText}>Waste Management</Text>
+              </View>
+              <View style={styles.modalServiceTag}>
+                <Text style={styles.modalServiceText}>Collection</Text>
+              </View>
             </View>
           </View>
 
@@ -212,22 +166,20 @@ const CompanyDetailModal = ({ company, visible, onClose }) => {
             <Text style={styles.modalSectionTitle}>Contact Information</Text>
             <View style={styles.modalContactRow}>
               <MapPin size={18} color="#4CAF50" />
-              <Text style={styles.modalContactText}>{company.address}</Text>
+              <Text style={styles.modalContactText}>
+                {company.companyAddress?.district}, {company.companyAddress?.sector}
+              </Text>
             </View>
             <View style={styles.modalContactRow}>
               <Phone size={18} color="#4CAF50" />
-              <Text style={styles.modalContactText}>{company.phone}</Text>
-            </View>
-            <View style={styles.modalContactRow}>
-              <Clock size={18} color="#4CAF50" />
-              <Text style={styles.modalContactText}>{company.openHours}</Text>
+              <Text style={styles.modalContactText}>{company.phoneNumber}</Text>
             </View>
           </View>
 
           <View style={styles.modalActions}>
             <TouchableOpacity 
               style={styles.modalActionButton}
-              onPress={() => Linking.openURL(`tel:${company.phone}`)}
+              onPress={() => Linking.openURL(`tel:${company.phoneNumber}`)}
             >
               <Phone size={18} color="#FFFFFF" />
               <Text style={styles.modalActionText}>Call Now</Text>
@@ -235,10 +187,10 @@ const CompanyDetailModal = ({ company, visible, onClose }) => {
             
             <TouchableOpacity 
               style={[styles.modalActionButton, styles.modalSecondaryButton]}
-              onPress={() => Linking.openURL(company.website)}
+              onPress={() => Alert.alert("Info", "Additional information not available")}
             >
               <Globe size={18} color="#4CAF50" />
-              <Text style={[styles.modalActionText, styles.modalSecondaryText]}>Visit Website</Text>
+              <Text style={[styles.modalActionText, styles.modalSecondaryText]}>More Info</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -248,34 +200,55 @@ const CompanyDetailModal = ({ company, visible, onClose }) => {
 };
 
 const NearByCompanies = () => {
-  const [companiesData, setCompaniesData] = useState(companies);
+  const [companiesInfo, setCompaniesInfo] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [sortBy, setSortBy] = useState('distance'); // distance, rating, name
+  const [sortBy, setSortBy] = useState('name'); // name, rating
+  const [loading, setLoading] = useState(true);
 
-  const filteredCompanies = companiesData.filter(company =>
-    company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    company.services.some(service => 
-      service.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  useEffect(() => {
+    const fetchCompaniesInfo = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`https://trash2treasure-backend.onrender.com/companyInfo`);
+        // Add isFavorite property to each company
+        const companiesWithFavorites = response.data.companies.map(company => ({
+          ...company,
+          isFavorite: false
+        }));
+        setCompaniesInfo(companiesWithFavorites);
+        console.log('Companies fetched:', companiesWithFavorites);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        Alert.alert("Error", "Unable to fetch companies info");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCompaniesInfo();
+  }, []);
+
+  const filteredCompanies = companiesInfo.filter(company =>
+    company.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    company.companyAddress?.district?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    company.companyAddress?.sector?.toLowerCase().includes(searchQuery.toLowerCase())
   ).sort((a, b) => {
     switch (sortBy) {
       case 'rating':
-        return b.rating - a.rating;
+        return 4.5 - 4.5; // Since we don't have actual ratings, keep default order
       case 'name':
-        return a.name.localeCompare(b.name);
-      case 'distance':
       default:
-        return parseFloat(a.distance) - parseFloat(b.distance);
+        return (a.companyName || '').localeCompare(b.companyName || '');
     }
   });
 
   const toggleFavorite = (companyId) => {
-    setCompaniesData(prev => 
+    setCompaniesInfo(prev => 
       prev.map(company => 
-        company.id === companyId 
+        company._id === companyId 
           ? { ...company, isFavorite: !company.isFavorite }
           : company
       )
@@ -287,7 +260,15 @@ const NearByCompanies = () => {
     setModalVisible(true);
   };
 
-  const favoriteCompanies = companiesData.filter(c => c.isFavorite);
+  const favoriteCompanies = companiesInfo.filter(c => c.isFavorite);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={styles.title}>Loading companies...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -301,7 +282,7 @@ const NearByCompanies = () => {
           <Search size={20} color="#4CAF50" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search companies or services..."
+            placeholder="Search companies or locations..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholderTextColor="#999"
@@ -320,9 +301,8 @@ const NearByCompanies = () => {
           <Text style={styles.filterTitle}>Sort by:</Text>
           <View style={styles.filterOptions}>
             {[
-              { key: 'distance', label: 'Distance' },
-              { key: 'rating', label: 'Rating' },
-              { key: 'name', label: 'Name' }
+              { key: 'name', label: 'Name' },
+              { key: 'rating', label: 'Rating' }
             ].map(option => (
               <TouchableOpacity
                 key={option.key}
@@ -351,14 +331,14 @@ const NearByCompanies = () => {
             data={favoriteCompanies}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => `fav_${item.id}`}
+            keyExtractor={(item) => `fav_${item._id}`}
             renderItem={({ item }) => (
               <TouchableOpacity 
                 style={styles.favoriteCard}
                 onPress={() => viewDetails(item)}
               >
-                <Text style={styles.favoriteCardName}>{item.name}</Text>
-                <Text style={styles.favoriteCardRating}>★ {item.rating}</Text>
+                <Text style={styles.favoriteCardName}>{item.companyName}</Text>
+                <Text style={styles.favoriteCardRating}>★ 4.5</Text>
               </TouchableOpacity>
             )}
           />
@@ -367,7 +347,7 @@ const NearByCompanies = () => {
 
       <FlatList
         data={filteredCompanies}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <CompanyCard 
