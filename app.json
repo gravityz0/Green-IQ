@@ -1,13 +1,13 @@
 {
   "expo": {
     "name": "GreenIQ",
+    "sdkVersion": "53.0.0",
     "jsEngine": "jsc",
     "slug": "GreenIQ",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "packagerOpts": {
       "hostType": "lan"
     },
