@@ -14,44 +14,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 
-// const rewards = [
-//   {
-//     id: 1,
-//     name: 'Eco Certificate',
-//     description: 'Official certificate for eco achievements.',
-//     cost: 500,
-//     image: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-//   },
-//   {
-//     id: 2,
-//     name: 'Reusable Water Bottle',
-//     description: 'Eco-friendly bottle to reduce plastic waste.',
-//     cost: 800,
-//     image: 'https://cdn-icons-png.flaticon.com/512/1046/1046857.png',
-//   },
-//   {
-//     id: 3,
-//     name: 'Discount Coupon',
-//     description: 'Get a discount at partner eco stores.',
-//     cost: 300,
-//     image: 'https://cdn-icons-png.flaticon.com/512/3523/3523887.png',
-//   },
-//   {
-//     id: 4,
-//     name: 'Tree Planting Sponsorship',
-//     description: 'Sponsor a tree planting in your name.',
-//     cost: 1000,
-//     image: 'https://cdn-icons-png.flaticon.com/512/427/427735.png',
-//   },
-//   {
-//     id: 5,
-//     name: 'Eco Tote Bag',
-//     description: 'Reusable tote bag for shopping.',
-//     cost: 400,
-//     image: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
-//   },
-// ];
-
 export default function Rewards({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const [rewards, setRewards] = useState([]);

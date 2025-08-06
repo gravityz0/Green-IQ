@@ -33,17 +33,6 @@ import SafeZonesMap from './screens/SafeZonesMap';
 import ScanChoiceScreen from './screens/ScanChoiceScreen';
 import ProductScanScreen from './screens/ProductScanScreen';
 import ClassificationResultScreen from './screens/ClassificationResultScreen';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import useNotificationListener from './hooks/useNotificationListener';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
 import NearByCompanies from './screens/NearByCompanies';
 //  Placeholder Challenges screen
 function ChallengesScreen({ navigation }) {
@@ -221,7 +210,7 @@ function AppTabs() {
         options={{ tabBarLabel: 'Scan' }}
       />
       <Tab.Screen name="RewardsTab" component={Rewards} options={{ tabBarLabel: 'Rewards' }} />
-      <Tab.Screen name="Chat" component={CollectionPoints} options={{ tabBarLabel: 'Nearby Companies' }} />
+      <Tab.Screen name="Chat" component={NearByCompanies} options={{ tabBarLabel: 'Nearby Companies' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -272,7 +261,6 @@ function CompanyTabs() {
 
 // The complete app navigation flow
 function App() {
-  useNotificationListener();
   return (
     <UserProvider>
       <NavigationContainer>

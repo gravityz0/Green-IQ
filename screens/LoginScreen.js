@@ -20,7 +20,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '../context/UserContext';
-import { registerForPushNotificationsAsync } from '../services/notification';
 
 const { width, height } = Dimensions.get('window');
 
@@ -90,7 +89,9 @@ const LoginScreen = ({ navigation }) => {
         password
       });
       const token = response.data.token;
-      await AsyncStorage.setItem('token', token);      // Save to local storage      
+      await AsyncStorage.setItem('token', token);  
+      const checkToken = await AsyncStorage.getItem('token');
+      console.log('Token saved and confirmed:', checkToken);    // Save to local storage      
       // Determine user role from multiple possible field names
       const userData = response.data.user || response.data;
       const userRole = userData.userRole || userData.role || userData.userType || 'citizen';      
