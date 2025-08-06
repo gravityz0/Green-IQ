@@ -89,22 +89,11 @@ const LoginScreen = ({ navigation }) => {
         email,
         password
       });
-      const { token, user } = response.data;
-
-      // Save to local storage
-      await AsyncStorage.setItem('token', token);
-      await registerForPushNotificationsAsync(user._id)
-      await AsyncStorage.setItem('userId', user._id);
-      
-      console.log('Full login response:', JSON.stringify(response.data, null, 2));
-      
+      const token = response.data.token;
+      await AsyncStorage.setItem('token', token);      // Save to local storage      
       // Determine user role from multiple possible field names
       const userData = response.data.user || response.data;
-      const userRole = userData.userRole || userData.role || userData.userType || 'citizen';
-      
-      console.log('User data:', userData);
-      console.log('Determined user role:', userRole);
-      
+      const userRole = userData.userRole || userData.role || userData.userType || 'citizen';      
       // Set user data and type
       setUser(userData);
       setUserType(userRole);

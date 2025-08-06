@@ -101,10 +101,17 @@ def predict_image():
         
         # Send data to backend
         try:
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
+                return jsonify({"error": "Missing Authorization header", "success": False}), 401
+
             backend_response = requests.post(
-                f"{BACKEND_URL}/waste-classification",
+                f"{BACKEND_URL}",
                 json=classification_data,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": auth_header
+                },
                 timeout=10
             )
             
