@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "GreenIQ",
-    "sdkVersion": "53.0.0",
-    "jsEngine": "jsc",
     "slug": "GreenIQ",
     "version": "1.0.0",
+    "sdkVersion": "53.0.0",
+    "jsEngine": "jsc",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -21,20 +21,36 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan waste items.",
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show SafeZones.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images."
+      }
     },
     "android": {
+      "package": "com.greeniq.app",
       "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.greeniq.app"
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": [
+      "expo-secure-store",
+      "expo-camera",
+      "expo-location",
+      "expo-image-picker"
+    ],
     "extra": {
       "eas": {
         "projectId": "459e78c6-47b2-4ee4-942c-95222ae6e0b6"
