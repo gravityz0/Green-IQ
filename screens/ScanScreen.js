@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import WasteClassificationModal from '../components/WasteClassificationModal';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 

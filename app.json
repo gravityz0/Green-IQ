@@ -52,14 +52,7 @@
           "apiKey": "AIzaSyBcHNh-brnTF5rSAhZzi2AjBKRtum3JnDQ"
         }
       },
-      "networkSecurityConfig": {
-        "domain-config": [
-          {
-            "domain": "5.252.53.111",
-            "cleartextTrafficPermitted": true
-          }
-        ]
-      }
+      "networkSecurityConfig": "./network_security_config.xml"
     },
     "web": {
       "favicon": "./assets/favicon.png"
