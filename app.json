@@ -30,6 +30,7 @@
     },
     "android": {
       "package": "com.greeniq.app",
+      "usesCleartextTraffic": true,
       "useNextNotificationsApi": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
