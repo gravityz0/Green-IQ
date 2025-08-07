@@ -25,7 +25,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to scan waste items.",
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show SafeZones.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images."
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "android": {
@@ -40,12 +43,22 @@
         "CAMERA",
         "ACCESS_FINE_LOCATION",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
       ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBcHNh-brnTF5rSAhZzi2AjBKRtum3JnDQ"
         }
+      },
+      "networkSecurityConfig": {
+        "domain-config": [
+          {
+            "domain": "5.252.53.111",
+            "cleartextTrafficPermitted": true
+          }
+        ]
       }
     },
     "web": {
