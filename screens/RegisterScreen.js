@@ -118,7 +118,7 @@ const RegisterScreen = ({ navigation, route }) => {
 
   const validatePhoneNumber = (phone) => {
     // Basic validation for Rwandan phone numbers
-    const phoneRegex = /^\+250[0-9]{8}$/;
+    const phoneRegex = /^\+250[0-9]{9}$/;
     return phoneRegex.test(phone);
   };
 
