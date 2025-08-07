@@ -40,7 +40,12 @@
         "ACCESS_FINE_LOCATION",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBcHNh-brnTF5rSAhZzi2AjBKRtum3JnDQ"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
